@@ -10,9 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppDispatch } from '@/hooks/useDispatch';
 import { postApiAction } from '@/services/mainService';
 
-const url = API.STUDENTS
-
-const AddStudentPage = () => {
+const AddTeacherPage = () => {
    const dispatch = useAppDispatch()
    const { token } = useAuth()
    const router = useRouter();
@@ -40,7 +38,6 @@ const AddStudentPage = () => {
          formData.append('id', values.id);
          formData.append('name', values.name);
          formData.append('email', values.email);
-         formData.append('class_id', values.class_id);
          formData.append('address', values.address);
          formData.append('phone_number', values.phone_number);
 
@@ -48,7 +45,7 @@ const AddStudentPage = () => {
          if (values.avatar) {
             const originalFile = values.avatar;
             const fileExtension = originalFile.name.split('.').pop(); // Lấy đuôi file
-            const newFileName = `${values.class_id}_${values.id}_${values.name}.${fileExtension}`;
+            const newFileName = `Teacher_${values.id}_${values.name}.${fileExtension}`;
 
             // Tạo file mới với tên đã định dạng
             const renamedFile = new File([originalFile], newFileName, {
@@ -58,23 +55,23 @@ const AddStudentPage = () => {
             formData.append('avatar', renamedFile);
          }
          console.log('Form data values:', formData.get('avatar'));
-         const response = await dispatch(postApiAction(token, formData, 'student'))
+         const response = await dispatch(postApiAction(token, formData, 'teacher'))
          console.log('Post res:', response);
-         messageApi.success('Thêm sinh viên thành công!');
-         router.push(`/student/camera?id=${values.id}&name=${encodeURIComponent(values.name)}&class_id=${values.class_id}`);
+         messageApi.success('Thêm giáo viên thành công!');
+         router.push(`/teacher/camera?id=${values.id}&name=${encodeURIComponent(values.name)}`);
       } catch (error: any) {
          const errorData = error?.response?.data;
 
          // Kiểm tra lỗi cụ thể
-         if (errorData?.id?.[0] === 'student with this id already exists.') {
-            messageApi.error('ID sinh viên đã tồn tại, vui lòng nhập ID khác');
+         if (errorData?.id?.[0] === 'teacher with this id already exists.') {
+            messageApi.error('ID giáo viên đã tồn tại, vui lòng nhập ID khác');
          } else if (errorData?.class_id?.[0] === 'This field is required.') {
-            messageApi.error('Vui lòng chọn lớp cho sinh viên');
-         } else if (errorData?.email?.[0] === 'student with this email already exists.') {
+            messageApi.error('Vui lòng chọn lớp cho giáo viên');
+         } else if (errorData?.email?.[0] === 'teacher with this email already exists.') {
             messageApi.error('Email này đã tồn tại, vui lòng nhập Email khác');
          } else if (errorData?.class_id?.[0] === `Invalid pk "${values.class_id}" - object does not exist.`) {
             messageApi.error('ID lớp không đúng, vui lòng nhập lại');
-         } else if (errorData?.phone_number?.[0] === `student with this phone number already exists.`) {
+         } else if (errorData?.phone_number?.[0] === `teacher with this phone number already exists.`) {
             messageApi.error('Số điện thoại đã tồn tại, vui lòng nhập lại');
          }
          else {
@@ -106,7 +103,7 @@ const AddStudentPage = () => {
    return (
       <div className="form-container">
          {Notification}
-         <h2 className='form-title'>Thêm sinh viên</h2>
+         <h2 className='form-title'>Thêm giáo viên</h2>
          <Form
             form={form}
             layout="horizontal"
@@ -116,17 +113,17 @@ const AddStudentPage = () => {
             initialValues={initialValues}
          >
             <Form.Item
-               label="ID sinh Viên"
+               label="ID giáo Viên"
                name="id"
-               rules={[{ required: true, message: 'Vui lòng nhập ID sinh viên!' }]}
+               rules={[{ required: true, message: 'Vui lòng nhập ID giáo viên!' }]}
             >
                <Input />
             </Form.Item>
 
             <Form.Item
-               label="Tên sinh Viên"
+               label="Tên giáo Viên"
                name="name"
-               rules={[{ required: true, message: 'Vui lòng nhập tên sinh viên!' }]}
+               rules={[{ required: true, message: 'Vui lòng nhập tên giáo viên!' }]}
             >
                <Input />
             </Form.Item>
@@ -135,14 +132,6 @@ const AddStudentPage = () => {
                label="Email"
                name="email"
                rules={[{ required: true, type: 'email', message: 'Vui lòng nhập email!' }]}
-            >
-               <Input />
-            </Form.Item>
-
-            <Form.Item
-               label="ID lớp"
-               name="class_id"
-               rules={[{ required: true, message: 'Vui lòng nhập ID lớp!' }]}
             >
                <Input />
             </Form.Item>
@@ -191,4 +180,4 @@ const AddStudentPage = () => {
    );
 };
 
-export default AddStudentPage;
+export default AddTeacherPage;

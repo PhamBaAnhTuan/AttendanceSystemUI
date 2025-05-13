@@ -1,30 +1,51 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-interface UserInfo {
-	id: number;
-	title: string;
-	completed: boolean;
-	createdAt: string;
-}
+import { message } from "antd";
+import { boolean } from "zod";
 
 interface AuthState {
-	user: UserInfo[];
+	loading: boolean;
+	error: string | null;
 	isAuthenticated: boolean;
-	isLoading: boolean;
+	token?: string | null;
+	user: object | null;
 }
 
 const initialState: AuthState = {
-	user: [],
+	loading: false,
+	error: null,
 	isAuthenticated: false,
-	isLoading: false,
+	token: null,
+	user: null,
 };
 
-export const todoSlice = createSlice({
-	name: "todos",
+export const authSlice = createSlice({
+	name: "auth",
 	initialState,
-	reducers: {},
+	reducers: {
+		signinStart(state) {
+			state.loading = true;
+			state.error = null;
+		},
+		signinSuccess(state, action) {
+			state.loading = false;
+			state.error = null;
+			state.isAuthenticated = true;
+			state.user = action.payload.user_data;
+			state.token = action.payload.access_token;
+		},
+		signinFailure(state, action) {
+			state.loading = false;
+			state.error = action.payload;
+		},
+		signout(state) {
+			state.loading = false;
+			state.error = null;
+			state.isAuthenticated = false;
+			state.user = null;
+			state.token = null;
+		},
+	},
 });
 
-export const {} = todoSlice.actions;
-
-export default todoSlice.reducer;
+export const { signinStart, signinSuccess, signinFailure, signout } = authSlice.actions;
+export default authSlice.reducer;

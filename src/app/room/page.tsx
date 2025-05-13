@@ -1,33 +1,34 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import './class.css'
+import './room.css'
 import { useRouter } from 'next/navigation';
 import { Avatar, Button, List, message, Skeleton, Alert } from 'antd';
 import { API } from '@/constants/api'
 // hooks
 import { useAuth } from '@/hooks/useAuth';
-import { useClass } from '@/hooks/useData';
+import { useRoom } from '@/hooks/useData';
 import { useDispatch } from 'react-redux';
 import { useRootContext } from '@/context/RootContext';
 // services
 import { deleteApiAction, getApiAction, postApiAction, updateApiAction } from '@/services/mainService';
 import { useAppDispatch } from '@/hooks/useDispatch';
 // types
-import { ClassType } from '@/store/classSlice';
+import { StudentType } from '@/store/studentSlice';
 
-const ClassPage = () => {
+
+const RoomPage = () => {
    const dispatch = useAppDispatch()
    const router = useRouter();
    const { user, token } = useAuth()
-   const { classList } = useClass()
+   const { roomList } = useRoom()
 
    const [loading, setLoading] = useState(false);
    const [messageApi, Notification] = message.useMessage();
 
    const [search, setSearch] = useState('');
-   const [classes, setClasses] = useState<ClassType[]>([]);
-   const [filtered, setFiltered] = useState<ClassType[]>([]);
+   const [rooms, setRooms] = useState<StudentType[]>([]);
+   const [filtered, setFiltered] = useState<StudentType[]>([]);
 
    const log = () => {
       console.log(
@@ -37,24 +38,24 @@ const ClassPage = () => {
    }
 
    useEffect(() => {
-      getClassList(token)
+      getRoomList(token)
    }, []);
    useEffect(() => {
-      if (classList.length > 0) {
-         setClasses(classList)
+      if (roomList.length > 0) {
+         setRooms(roomList)
       }
-   }, [classList]);
+   }, [roomList]);
 
-   const getClassList = async (token: string | any) => {
+   const getRoomList = async (token: string | any) => {
       setLoading(true);
       try {
-         const response = await dispatch(getApiAction(token, '', 'class'))
+         const response = await dispatch(getApiAction(token, '', 'room'))
          console.log('Response:', response);
-         messageApi.success('Lấy danh sách lớp thành công!');
-         // setclasses(response.data);
+         messageApi.success('Lấy danh sách phòng học thành công!');
+         // setStudents(response.data);
       } catch (error: any) {
-         console.error('Failed to fetch rooms:', error?.response?.data || error?.message);
-         messageApi.error('Lấy danh sách lớp thất bại!');
+         console.error('Failed to fetch room:', error?.response?.data || error?.message);
+         messageApi.error('Lấy danh sách phòng học thất bại!');
       } finally {
          setLoading(false);
       }
@@ -63,23 +64,23 @@ const ClassPage = () => {
    // Filter list when search input changes
    useEffect(() => {
       const lower = search.toLowerCase();
-      const filteredData = classes.filter(student =>
-         student.name?.toLowerCase().includes(lower)
+      const filteredData = rooms.filter(room =>
+         room.name?.toLowerCase().includes(lower)
       );
       setFiltered(filteredData);
       console.log('filteredData', filteredData);
-   }, [search, classes]);
+   }, [search, rooms]);
 
    const confirmDelete = async (id: number, name: string) => {
-      if (confirm(`Bạn có chắc chắn muốn xóa lớp ${name} không?`)) {
+      if (confirm(`Bạn có chắc chắn muốn xóa phòng ${name} không?`)) {
          try {
-            const response = dispatch(deleteApiAction(token, id, 'class'))
-            messageApi.success(`Xóa lớp ${name} thành công!`);
-            setClasses(prev => prev.filter(s => s.id !== id));
+            const response = dispatch(deleteApiAction(token, id, 'room'))
+            messageApi.success(`Xóa phòng ${name} thành công!`);
+            setRooms(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));
          } catch (error: any) {
-            messageApi.error(`Xóa lớp ${name} thất bại!`);
-            console.log('Failed to delete class:', error?.response?.data || error?.message);
+            messageApi.error(`Xóa phòng ${name} thất bại!`);
+            console.log('Failed to delete room:', error?.response?.data || error?.message);
          }
       }
    };
@@ -88,17 +89,17 @@ const ClassPage = () => {
       <div style={{ height: '100vh', width: '100vw', margin: '0 auto' }}>
          {Notification}
          <div style={{ height: '10vh', textAlign: 'center', alignContent: 'center' }}>
-            <h1>Danh sách lớp học</h1>
+            <h1>Danh sách phòng học</h1>
          </div>
 
          <div className="student-header">
             <input type="text"
-               placeholder="Tìm lớp học..."
+               placeholder="Tìm phòng học..."
                className="student-search"
                value={search}
                onChange={(e) => setSearch(e.target.value)}
             />
-            <Button className="student-add-button" href='/class/add_class'>Thêm lớp học</Button>
+            <Button className="student-add-button" href='/room/add_room'>Thêm phòng học</Button>
          </div>
 
 
@@ -112,9 +113,16 @@ const ClassPage = () => {
                   <List.Item
                      actions={[
                         <a
+                           key="view"
+                           style={{ fontWeight: 'bold' }}
+                           onClick={() => router.push(`/room/update_room/${item.id}`)}
+                        >
+                           Đặt phòng học
+                        </a>,
+                        <a
                            key="edit"
                            style={{ fontWeight: 'bold' }}
-                           onClick={() => router.push(`/class/update_class/${item.id}`)}
+                           onClick={() => router.push(`/room/update_room/${item.id}`)}
                         >
                            Chỉnh sửa
                         </a>,
@@ -143,4 +151,4 @@ const ClassPage = () => {
    );
 };
 
-export default ClassPage;
+export default RoomPage;

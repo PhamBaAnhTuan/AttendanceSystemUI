@@ -5,14 +5,21 @@ import { Alert, Button, Form, Input, message, Upload } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
 import '../../student.css'
 import axios from 'axios';
-import { get } from 'http';
 import { API } from '@/constants/api';
+// hooks
+import { useAuth } from '@/hooks/useAuth';
+import { useAppDispatch } from '@/hooks/useDispatch';
+// services
+import { getApiAction } from '@/services/mainService';
 
 const url = API.STUDENTS
 
 const UpdateStudentPage = () => {
+   const dispatch = useAppDispatch()
+   const { token } = useAuth()
    const { id } = useParams();
    const router = useRouter();
+   const [messageApi, contextHolder] = message.useMessage();
    const [form] = Form.useForm();
    const [loading, setLoading] = useState(false);
 
@@ -38,37 +45,37 @@ const UpdateStudentPage = () => {
    };
 
    useEffect(() => {
-      const getUserInfo = async () => {
+      const getStudentInfo = async () => {
          setLoading(true);
          try {
-            const response = await axios.get(`${url}${id}/`);
-            console.log('Response:', response?.data);
-            const data = response?.data;
+            const response = await dispatch(getApiAction(token, id, 'student'))
+            console.log('Response:', response);
+            messageApi.success('Get student successfully!');
             form.setFieldsValue({
-               id: data?.id,
-               name: data?.name,
-               class_id: data?.class_id,
-               email: data?.email,
-               address: data?.address,
-               phone_number: data?.phone_number,
+               id: response?.id,
+               name: response?.name,
+               class_id: response?.class_id,
+               email: response?.email,
+               address: response?.address,
+               phone_number: response?.phone_number,
             });
-            if (data?.avatar) {
-               const parts = data.avatar.split('/');
+            if (response?.avatar) {
+               const parts = response.avatar.split('/');
                const filename = parts[parts.length - 1];
                setImgFileName(filename);
             }
          } catch (error: any) {
-            const errorData = error?.response?.data;
-            console.error('Lỗi chi tiết từ server:', errorData);
+            console.error('Failed to fetch students:', error?.response?.data || error?.message);
+            messageApi.error('Get student failed!');
          } finally {
             setLoading(false);
          }
       };
 
-      getUserInfo();
+      getStudentInfo();
    }, [id, form]);
 
-   const [messageApi, contextHolder] = message.useMessage();
+
    const onFinish = async (values: any) => {
       console.log('Form values:', values);
       setLoading(true);
@@ -90,12 +97,13 @@ const UpdateStudentPage = () => {
       }
 
       try {
-         const response = await axios.patch(`${url}${values.id}/`, formData);
-         console.log('Response:', response.data);
-         messageApi.open({
-            type: 'success',
-            content: 'Add student successfully!',
+         const response = await axios.patch(`${url}${values.id}/`, formData, {
+            headers: {
+               'Authorization': `Bearer ${token}`,
+            },
          });
+         console.log('Response:', response.data);
+         messageApi.success('Cập nhật sinh viên thành công!');
          router.replace('/student');
       } catch (error: any) {
          console.error('Lỗi chi tiết từ server:', error.response?.data);
@@ -106,6 +114,7 @@ const UpdateStudentPage = () => {
 
    return (
       <div className="form-container">
+         {contextHolder}
          <h1 className="form-title">Cập nhật sinh viên</h1>
          <Form
             form={form}
@@ -139,23 +148,23 @@ const UpdateStudentPage = () => {
             </Form.Item>
 
             <Form.Item
-               label="Class ID"
+               label="ID lớp"
                name="class_id"
-               rules={[{ required: true, message: 'Vui lòng nhập Class ID!' }]}
+               rules={[{ required: true, message: 'Vui lòng nhập ID lớp!' }]}
             >
                <Input />
             </Form.Item>
 
             <Form.Item
-               label="Dia chi"
+               label="Địa chỉ thường trú"
                name="address"
-               rules={[{ required: true, message: 'Vui lòng nhập Dia chi!' }]}
+               rules={[{ required: true, message: 'Vui lòng nhập Địa chỉ!' }]}
             >
                <Input />
             </Form.Item>
 
             <Form.Item
-               label="Phone number"
+               label="Số điện thoại"
                name="phone_number"
                rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
             >
@@ -179,13 +188,13 @@ const UpdateStudentPage = () => {
                {imgFileName && <Alert message={`Đã chọn: ${imgFileName}`} type="success" showIcon style={{ marginTop: '10px' }} />}
             </Form.Item>
 
-            <Button htmlType="submit" type="primary" loading={loading} style={{ width: '100%' }}>
+            <Button htmlType="submit" type="primary" loading={loading} className='log-button'>
                Cập nhật
             </Button>
          </Form>
-         <Button style={{ width: '100%' }} onClick={log}>
+         {/* <Button style={{ width: '100%' }} onClick={log}>
             LOG
-         </Button>
+         </Button> */}
       </div>
    );
 };

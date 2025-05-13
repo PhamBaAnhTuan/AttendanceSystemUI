@@ -1,67 +1,47 @@
-import { getStudentsAPI } from "@/services/studentService";
+// import { getStudentsAPI } from "@/services/mainService";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface StudentType {
 	gender?: string;
+	id?: number | string | any;
 	name?: string;
 	email?: string;
-	avatar?: string;
-	loading: boolean;
+	classId?: string;
+	address?: string;
+	phoneNumber?: number | string;
+	avatar?: string | any;
 }
 
 interface StudentState {
-	isLoading: boolean;
-	error: string | null;
 	studentList: StudentType[] | any[];
 }
 
 const initialState: StudentState = {
-	isLoading: false,
-	error: null,
 	studentList: [],
 };
-
-export const fetchStudentsAction = createAsyncThunk("students/fetchStudentsAction", async () => {
-	return await getStudentsAPI();
-});
 
 export const studentSlice = createSlice({
 	name: "students",
 	initialState,
 	reducers: {
-		// Thêm sinh viên mới
-		// addStudent: (state, action: PayloadAction<Student>) => {
-		// 	state.students.push(action.payload);
-		// },
-		// // Cập nhật thông tin sinh viên
-		// updateStudent: (state, action: PayloadAction<Student>) => {
-		// 	const index = state.students.findIndex((s) => s.id === action.payload.id);
-		// 	if (index !== -1) {
-		// 		state.students[index] = action.payload;
-		// 	}
-		// },
-		// // Xóa sinh viên theo ID
-		// deleteStudent: (state, action: PayloadAction<number>) => {
-		// 	state.students = state.students.filter((s) => s.id !== action.payload);
-		// },
-	},
-	extraReducers: (builder) => {
-		builder
-			.addCase(fetchStudentsAction.pending, (state) => {
-				state.isLoading = true;
-				state.error = null;
-			})
-			.addCase(fetchStudentsAction.fulfilled, (state, action) => {
-				state.studentList = action.payload;
-				state.isLoading = false;
-			})
-			.addCase(fetchStudentsAction.rejected, (state, action) => {
-				state.isLoading = false;
-				state.error = action.error.message || "Something went wrong";
-			});
+		getStudent(state, action) {
+			state.studentList = action.payload;
+		},
+		addStudent(state, action: PayloadAction<StudentType>) {
+			state.studentList.push(action.payload);
+		},
+		updateStudent(state, action: PayloadAction<StudentType>) {
+			const index = state.studentList.findIndex((student) => student.id === action.payload.id);
+			if (index !== -1) {
+				state.studentList[index] = action.payload;
+			}
+		},
+		deleteStudent(state, action: PayloadAction<string>) {
+			state.studentList.filter((student) => student.id !== action.payload);
+		},
 	},
 });
 
-export const {} = studentSlice.actions;
+export const { getStudent, addStudent, updateStudent, deleteStudent } = studentSlice.actions;
 
 export default studentSlice.reducer;

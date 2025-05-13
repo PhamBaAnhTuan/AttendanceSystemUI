@@ -10,8 +10,6 @@ import { useAppDispatch } from '@/hooks/useDispatch';
 // services
 import { postImgAction } from '@/services/mainService';
 
-const url = API.STUDENTS;
-
 const directions = ['Nhìn thẳng vào màn hình', 'Quay sang TRÁI', 'Quay sang PHẢI'];
 
 function StreamCamera() {
@@ -20,9 +18,8 @@ function StreamCamera() {
    const router = useRouter();
    // 
    const searchParams = useSearchParams();
-   const className = searchParams.get('class_id');
-   const studentId = searchParams.get('id');
-   const studentName = searchParams.get('name')?.replace(/\s+/g, '');
+   const teacherId = searchParams.get('id');
+   const teacherName = searchParams.get('name')?.replace(/\s+/g, '');
 
    const videoRef = useRef<HTMLVideoElement>(null);
    const [images, setImages] = useState<string[]>([]);
@@ -63,11 +60,11 @@ function StreamCamera() {
       const blob = base64ToBlob(dataURL, 'image/jpeg');
 
       const normalizedDirect = normalizeDirection(directions);
-      const fileName = `${className}_${studentId}_${studentName}_${normalizedDirect}.png`;
+      const fileName = `Teacher_${teacherId}_${teacherName}_${normalizedDirect}.png`;
       const imgForm = new FormData();
       imgForm.append('image', blob, fileName);
 
-      postImgAction(token, imgForm, 'student')
+      postImgAction(token, imgForm, 'teacher')
 
       setImages((prev) => [...prev, dataURL]);
    };
@@ -118,7 +115,7 @@ function StreamCamera() {
 
    return (
       <div className='camera-container'>
-         <h1 className='heading'>Hướng dẫn chụp ảnh sinh viên</h1>
+         <h1 className='heading'>Hướng dẫn chụp ảnh giáo viên</h1>
          <video ref={videoRef} autoPlay playsInline className='video' />
 
          {instruction && (
@@ -132,7 +129,7 @@ function StreamCamera() {
                Bắt đầu chụp
             </Button>
 
-            <Button danger onClick={() => router.replace('/student')}>
+            <Button danger onClick={() => router.replace('/teacher')}>
                Xong
             </Button>
          </div>

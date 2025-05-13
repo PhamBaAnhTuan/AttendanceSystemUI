@@ -1,33 +1,33 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import './class.css'
+import './student.css'
 import { useRouter } from 'next/navigation';
 import { Avatar, Button, List, message, Skeleton, Alert } from 'antd';
 import { API } from '@/constants/api'
 // hooks
 import { useAuth } from '@/hooks/useAuth';
-import { useClass } from '@/hooks/useData';
+import { useStudent, useTeacher } from '@/hooks/useData';
 import { useDispatch } from 'react-redux';
 import { useRootContext } from '@/context/RootContext';
 // services
 import { deleteApiAction, getApiAction, postApiAction, updateApiAction } from '@/services/mainService';
 import { useAppDispatch } from '@/hooks/useDispatch';
 // types
-import { ClassType } from '@/store/classSlice';
+import { TeacherType } from '@/store/teacherSlice';
 
-const ClassPage = () => {
+const StudentPage = () => {
    const dispatch = useAppDispatch()
    const router = useRouter();
    const { user, token } = useAuth()
-   const { classList } = useClass()
+   const { teacherList } = useTeacher()
 
    const [loading, setLoading] = useState(false);
    const [messageApi, Notification] = message.useMessage();
 
    const [search, setSearch] = useState('');
-   const [classes, setClasses] = useState<ClassType[]>([]);
-   const [filtered, setFiltered] = useState<ClassType[]>([]);
+   const [teachers, setTeachers] = useState<TeacherType[]>([]);
+   const [filtered, setFiltered] = useState<TeacherType[]>([]);
 
    const log = () => {
       console.log(
@@ -37,24 +37,24 @@ const ClassPage = () => {
    }
 
    useEffect(() => {
-      getClassList(token)
+      getTeacherList(token)
    }, []);
    useEffect(() => {
-      if (classList.length > 0) {
-         setClasses(classList)
+      if (teacherList.length > 0) {
+         setTeachers(teacherList)
       }
-   }, [classList]);
+   }, [teacherList]);
 
-   const getClassList = async (token: string | any) => {
+   const getTeacherList = async (token: string | any) => {
       setLoading(true);
       try {
-         const response = await dispatch(getApiAction(token, '', 'class'))
+         const response = await dispatch(getApiAction(token, '', 'teacher'))
          console.log('Response:', response);
-         messageApi.success('Lấy danh sách lớp thành công!');
-         // setclasses(response.data);
+         messageApi.success('Lấy danh sách giáo viên thành công!');
+         // setteachers(response.data);
       } catch (error: any) {
-         console.error('Failed to fetch rooms:', error?.response?.data || error?.message);
-         messageApi.error('Lấy danh sách lớp thất bại!');
+         console.error('Failed to fetch teacher:', error?.response?.data || error?.message);
+         messageApi.error('Lấy danh sách giáo viên thất bại!');
       } finally {
          setLoading(false);
       }
@@ -63,23 +63,23 @@ const ClassPage = () => {
    // Filter list when search input changes
    useEffect(() => {
       const lower = search.toLowerCase();
-      const filteredData = classes.filter(student =>
+      const filteredData = teachers.filter(student =>
          student.name?.toLowerCase().includes(lower)
       );
       setFiltered(filteredData);
       console.log('filteredData', filteredData);
-   }, [search, classes]);
+   }, [search, teachers]);
 
    const confirmDelete = async (id: number, name: string) => {
-      if (confirm(`Bạn có chắc chắn muốn xóa lớp ${name} không?`)) {
+      if (confirm(`Bạn có chắc chắn muốn xóa giáo viên ${name} không?`)) {
          try {
-            const response = dispatch(deleteApiAction(token, id, 'class'))
-            messageApi.success(`Xóa lớp ${name} thành công!`);
-            setClasses(prev => prev.filter(s => s.id !== id));
+            const response = dispatch(deleteApiAction(token, id, 'student'))
+            messageApi.success(`Xóa giáo viên ${name} thành công!`);
+            setTeachers(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));
          } catch (error: any) {
-            messageApi.error(`Xóa lớp ${name} thất bại!`);
-            console.log('Failed to delete class:', error?.response?.data || error?.message);
+            messageApi.error(`Xóa giáo viên ${name} thất bại!`);
+            console.log('Failed to delete teacher:', error?.response?.data || error?.message);
          }
       }
    };
@@ -88,17 +88,17 @@ const ClassPage = () => {
       <div style={{ height: '100vh', width: '100vw', margin: '0 auto' }}>
          {Notification}
          <div style={{ height: '10vh', textAlign: 'center', alignContent: 'center' }}>
-            <h1>Danh sách lớp học</h1>
+            <h1>Danh sách giáo viên</h1>
          </div>
 
          <div className="student-header">
             <input type="text"
-               placeholder="Tìm lớp học..."
+               placeholder="Tìm giáo viên..."
                className="student-search"
                value={search}
                onChange={(e) => setSearch(e.target.value)}
             />
-            <Button className="student-add-button" href='/class/add_class'>Thêm lớp học</Button>
+            <Button className="student-add-button" href='/teacher/add_teacher'>Thêm giáo viên</Button>
          </div>
 
 
@@ -114,7 +114,7 @@ const ClassPage = () => {
                         <a
                            key="edit"
                            style={{ fontWeight: 'bold' }}
-                           onClick={() => router.push(`/class/update_class/${item.id}`)}
+                           onClick={() => router.push(`/teacher/update_teacher/${item.id}`)}
                         >
                            Chỉnh sửa
                         </a>,
@@ -143,4 +143,4 @@ const ClassPage = () => {
    );
 };
 
-export default ClassPage;
+export default StudentPage;

@@ -1,73 +1,144 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, List, Skeleton } from 'antd';
-import styles from './page.module.css'
+import axios from 'axios';
+import './subject.css'
+import { useRouter } from 'next/navigation';
+import { Avatar, Button, List, message, Skeleton, Alert } from 'antd';
 import { API } from '@/constants/api'
+// hooks
+import { useAuth } from '@/hooks/useAuth';
+import { useSubject } from '@/hooks/useData';
+import { useDispatch } from 'react-redux';
+import { useRootContext } from '@/context/RootContext';
+// services
+import { deleteApiAction, getApiAction, postApiAction, updateApiAction } from '@/services/mainService';
+import { useAppDispatch } from '@/hooks/useDispatch';
+// types
+import { StudentType } from '@/store/studentSlice';
 
-interface DataType {
-   gender?: string;
-   name?: string;
-   email?: string;
-   avatar?: string;
-   loading: boolean;
-}
-
-const url = API.SUBJECTS
 
 const SubjectPage = () => {
-   const [loading, setLoading] = useState(true);
-   const [students, setStudents] = useState<DataType[]>([]);
+   const dispatch = useAppDispatch()
+   const router = useRouter();
+   const { user, token } = useAuth()
+   const { subjectList } = useSubject()
 
-   const fetchAllStudents = async () => {
+   const [loading, setLoading] = useState(false);
+   const [messageApi, Notification] = message.useMessage();
+
+   const [search, setSearch] = useState('');
+   const [subjects, setSubjects] = useState<StudentType[]>([]);
+   const [filtered, setFiltered] = useState<StudentType[]>([]);
+
+   const log = () => {
+      console.log(
+         '\nUser: ', user,
+         '\nToken: ', token,
+      );
+   }
+
+   useEffect(() => {
+      getSubjectList(token)
+   }, []);
+   useEffect(() => {
+      if (subjectList.length > 0) {
+         setSubjects(subjectList)
+      }
+   }, [subjectList]);
+
+   const getSubjectList = async (token: string | any) => {
+      setLoading(true);
       try {
-         const res = await fetch(url);
-         const data = await res.json();
-         setStudents(data);
-      } catch (error) {
-         console.error('Failed to fetch subject:', error);
+         const response = await dispatch(getApiAction(token, '', 'subject'))
+         console.log('Response:', response);
+         messageApi.success('Lấy danh sách môn học thành công!');
+      } catch (error: any) {
+         console.error('Failed to fetch subject:', error?.response?.data || error?.message);
+         messageApi.error('Lấy danh sách môn học thất bại!');
       } finally {
          setLoading(false);
       }
    };
 
+   // Filter list when search input changes
    useEffect(() => {
-      fetchAllStudents();
-   }, []);
+      const lower = search.toLowerCase();
+      const filteredData = subjects.filter(subject =>
+         subject.name?.toLowerCase().includes(lower)
+      );
+      setFiltered(filteredData);
+      console.log('filteredData', filteredData);
+   }, [search, subjects]);
+
+   const confirmDelete = async (id: number, name: string) => {
+      if (confirm(`Bạn có chắc chắn muốn xóa môn ${name} không?`)) {
+         try {
+            const response = dispatch(deleteApiAction(token, id, 'subject'))
+            messageApi.success(`Xóa môn ${name} thành công!`);
+            setSubjects(prev => prev.filter(s => s.id !== id));
+            setFiltered(prev => prev.filter(s => s.id !== id));
+         } catch (error: any) {
+            messageApi.error(`Xóa môn ${name} thất bại!`);
+            console.log('Failed to delete subject:', error?.response?.data || error?.message);
+         }
+      }
+   };
 
    return (
       <div style={{ height: '100vh', width: '100vw', margin: '0 auto' }}>
+         {Notification}
          <div style={{ height: '10vh', textAlign: 'center', alignContent: 'center' }}>
-            <h1>Danh sách subject</h1>
+            <h1>Danh sách môn học</h1>
          </div>
+
+         <div className="student-header">
+            <input type="text"
+               placeholder="Tìm môn học..."
+               className="student-search"
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+            />
+            <Button className="student-add-button" href='/subject/add_subject'>Thêm môn học</Button>
+         </div>
+
 
          <div style={{ height: '80vh', width: '70vw', overflow: 'auto', margin: '0 auto' }}>
             <List
                className="demo-loadmore-list"
                loading={loading}
                itemLayout="horizontal"
-               dataSource={students}
-               renderItem={(item) => (
+               dataSource={filtered}
+               renderItem={(item: any) => (
                   <List.Item
                      actions={[
-                        <a style={{ fontWeight: 'bold' }}>Edit info</a>,
-                        <a style={{ fontWeight: 'bold', color: 'red' }}>Delete</a>
+                        <a
+                           key="edit"
+                           style={{ fontWeight: 'bold' }}
+                           onClick={() => router.push(`/subject/update_subject/${item.id}`)}
+                        >
+                           Chỉnh sửa
+                        </a>,
+                        <a
+                           key="delete"
+                           style={{ fontWeight: 'bold', color: 'red' }}
+                           onClick={() => confirmDelete(item.id, item.name)}
+                        >
+                           Xóa
+                        </a>
                      ]}
                   >
                      <Skeleton avatar title={false} loading={item.loading} active>
                         <List.Item.Meta
                            avatar={<Avatar src={item.avatar} />}
-                           title={<a href="#">{item.name}</a>}
-                           description="Ant Design, a design language for background applications, is refined by Ant UED Team"
+                           title={item.name}
+                           description={item.email}
                         />
-                        {/* <div>content</div> */}
                      </Skeleton>
                   </List.Item>
                )}
             />
          </div>
-         <div style={{ height: '10vh', width: '70vw', margin: '0 auto', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-            <Button style={{ backgroundColor: 'lightblue', justifySelf: 'end' }} href='./add_student'>Add subject</Button>
-         </div>
+
       </div>
    );
 };
