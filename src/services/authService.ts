@@ -22,7 +22,7 @@ export const authAction = (credentials: any, message: any, method: string) => {
 			} else if (errorMsg?.username?.[0] === "A user with that username already exists.") {
 				message.error("Username đã tồn tại, vui lòng nhập Username khác!");
 			}
-			console.log(`${method} error: `, errorMsg);
+			console.log(`${method} error: `, error);
 			dispatch(signinFailure(errorMsg));
 		}
 	};

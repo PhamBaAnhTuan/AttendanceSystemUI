@@ -44,9 +44,12 @@ import SignInPage from '../app/signin/page';
 import SignUpPage from '../app/signup/page';
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
-   const pathname = usePathname();
+   // const pathname = usePathname();
    const router = useRouter();
-   const { loading, isAuthenticated } = useAuth();
+   // const { loading, isAuthenticated } = useAuth();
+   const pathname = '/'
+   const isAuthenticated = true
+   const loading = false
 
    useEffect(() => {
       if (loading) return;
@@ -62,7 +65,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
    // if (loading) return <h2>Loading...</h2>;
 
    if (!isAuthenticated) {
-      if (pathname === '/signin') return <SignInPage />;
+      if (pathname === '/') return <SignInPage />;
       if (pathname === '/signup') return <SignUpPage />;
       return <SignInPage />;
    }
