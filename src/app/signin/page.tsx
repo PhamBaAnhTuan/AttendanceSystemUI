@@ -33,8 +33,8 @@ const SignInPage = () => {
    const pathname = usePathname();
    // Hàm xử lý submit form
    const handleSubmit = async (values: any) => {
-      // console.log('Form values: ', values);
-      // console.log('Path name: ', pathname);
+      console.log('Form values: ', values);
+      console.log('Path name: ', pathname);
       dispatch(authAction(values, messageApi, 'signin'))
    };
 
