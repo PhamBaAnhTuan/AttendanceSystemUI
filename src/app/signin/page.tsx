@@ -1,59 +1,73 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import '../student/student.css';
+import '../(dashboard)/student/student.css';
+import { API_AUTH } from '@/constants/api';
+// router
 import { usePathname, useRouter } from 'next/navigation';
-import { Button, Input, Form, message } from 'antd';
+import Link from 'next/link';
+// components
+import { Button, Input, Form, message, Alert } from 'antd';
+import TextArea from 'antd/es/input/TextArea';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
 import { useAppDispatch } from '@/hooks/useDispatch';
+import { useMessageContext } from '@/context/messageContext';
 // services
-import { authAction } from '@/services/authService';
-import Link from 'next/link';
+import { signinSuccess, signout } from '@/store/authSlice'
+import axios from 'axios';
 
 const SignInPage = () => {
    const dispatch = useAppDispatch()
-   const { isAuthenticated, user, token, error, loading } = useAuth()
-   const [messageApi, Notification] = message.useMessage();
+   const { isAuthenticated, info, token } = useAuth()
+   const { showMessage } = useMessageContext()
 
    const [form] = Form.useForm();
-   const [initialValues, setInitialValues] = useState<any>();
+   const [loading, setLoading] = useState(false)
 
    const log = () => {
       console.log(
          'Is authenticated: ', isAuthenticated,
-         '\n User: ', user,
-         '\n Token: ', token,
-         '\n Error: ', error,
          '\n Loading: ', loading,
-         '\n Path name: ', pathname,
+         '\n User: ', info,
+         '\n Token: ', token,
       );
    }
 
-   const pathname = usePathname();
-   // Hàm xử lý submit form
+   // 
    const handleSubmit = async (values: any) => {
-      // console.log('Form values: ', values);
-      // console.log('Path name: ', pathname);
-      dispatch(authAction(values, messageApi, 'signin'))
+      // dispatch(signinStart())
+      setLoading(true)
+      try {
+         const response = await axios.post(API_AUTH.SIGNIN, values)
+         const data = response.data
+         showMessage('success', 'Đăng nhập thành công!');
+         dispatch(signinSuccess(data))
+      } catch (error: any) {
+         const errorMsg = error?.response?.data?.detail;
+         if (errorMsg === "Invalid credentials!") {
+            showMessage('error', "Thông tin đăng nhập không hợp lệ!");
+         }
+         console.log(`Sign in error: `, errorMsg);
+      } finally {
+         setLoading(false)
+      }
    };
 
    return (
-      <div className="form-container">
-         {Notification}
-         <h2 className='form-title'>Sign In</h2>
+      <div className="signin-form-container">
+         <h2 className='form-title'>SIGN IN</h2>
          <Form
             form={form}
             layout="horizontal"
             labelCol={{ span: 6 }}
             wrapperCol={{ span: 18 }}
             onFinish={handleSubmit}
-            initialValues={initialValues}
          >
             <Form.Item
-               label="Username"
+               label="Email"
                name="username"
-               rules={[{ required: true, message: 'Vui lòng nhập Username!' }]}
+               rules={[{ required: true, type: 'email', message: 'Vui lòng nhập Email!' }]}
             >
                <Input />
             </Form.Item>
@@ -63,18 +77,13 @@ const SignInPage = () => {
                name="password"
                rules={[{ required: true, message: 'Vui lòng nhập Password!' }]}
             >
-               <Input />
+               <Input.Password />
             </Form.Item>
 
             <Button type="primary" htmlType="submit" loading={loading} className='log-button'>
                Sign In
             </Button>
          </Form>
-         <h4 className='link'>
-            <Link href="./signup" className='link'>
-               Đăng ký
-            </Link>
-         </h4>
          {/* <button style={{ height: '8vh', width: '30%', alignSelf: 'center' }} onClick={log}>
             LOG
          </button> */}

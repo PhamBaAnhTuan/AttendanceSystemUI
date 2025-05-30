@@ -1,9 +1,10 @@
-'use client'
-import '@ant-design/v5-patch-for-react-19';
+// 'use client'
 import '@/styles/globals.css';
+import React from 'react';
 import { ConfigProvider } from 'antd';
 // context
 import { RootContextProvider } from '@/context/RootContext';
+import { MessageProvider } from '@/context/messageContext';
 // components
 import { Providers } from '@/components/Providers';
 import AuthGate from '../components/AuthGate';
@@ -14,13 +15,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
-          <Providers>
+        <Providers>
+          <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
             <RootContextProvider>
-              <AuthGate>{children}</AuthGate>
+              <MessageProvider>
+                <AuthGate>
+                  {children}
+                </AuthGate>
+              </MessageProvider>
             </RootContextProvider>
-          </Providers>
-        </ConfigProvider>
+          </ConfigProvider>
+        </Providers>
       </body>
     </html>
   );

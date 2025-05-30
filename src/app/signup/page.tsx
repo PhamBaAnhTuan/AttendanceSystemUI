@@ -1,32 +1,29 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import '../student/student.css';
+import '../(dashboard)/student/student.css';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button, Input, Form, message } from 'antd';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
 import { useAppDispatch } from '@/hooks/useDispatch';
 // services
-import { authAction } from '@/services/authService';
 import Link from 'next/link';
 
 
 const SignUpPage = () => {
    const dispatch = useAppDispatch()
-   const { isAuthenticated, user, token, error, loading } = useAuth()
+   const { isAuthenticated, info, token } = useAuth()
    const [messageApi, Notification] = message.useMessage();
+   const [loading, setIsLoading] = useState(false)
 
    const [form] = Form.useForm();
-   const [initialValues, setInitialValues] = useState<any>();
 
    const log = () => {
       console.log(
          'Is authenticated: ', isAuthenticated,
-         '\n User: ', user,
+         '\n User: ', info,
          '\n Token: ', token,
-         '\n Error: ', error,
-         '\n Loading: ', loading,
          '\n Path name: ', pathname,
       );
    }
@@ -36,7 +33,6 @@ const SignUpPage = () => {
    const handleSubmit = async (values: any) => {
       // console.log('Form values: ', values);
       // console.log('Path name: ', pathname);
-      dispatch(authAction(values, messageApi, 'signup'))
    };
 
    return (
@@ -49,7 +45,6 @@ const SignUpPage = () => {
             labelCol={{ span: 6 }}
             wrapperCol={{ span: 18 }}
             onFinish={handleSubmit}
-            initialValues={initialValues}
          >
             <Form.Item
                label="Username"
