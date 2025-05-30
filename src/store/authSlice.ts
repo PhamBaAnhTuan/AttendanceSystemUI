@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { get } from "http";
 
 interface AuthState {
 	isAuthenticated?: boolean;
@@ -29,6 +30,9 @@ export const authSlice = createSlice({
 			state.scope = action.payload.scope;
 			state.isAdmin = action.payload.scope === "admin" ? true : false;
 		},
+		getUserInfo(state, action: PayloadAction<object>) {
+			state.info = action.payload;
+		},
 		signout(state) {
 			state.isAuthenticated = false;
 			state.token = null;
@@ -39,5 +43,5 @@ export const authSlice = createSlice({
 	},
 });
 
-export const { signinSuccess, signout } = authSlice.actions;
+export const { signinSuccess, getUserInfo, signout } = authSlice.actions;
 export default authSlice.reducer;

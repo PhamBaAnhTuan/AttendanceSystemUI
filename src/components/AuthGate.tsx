@@ -8,7 +8,7 @@ import SignUpPage from '../app/signup/page';
 import { ConfigProvider } from 'antd';
 // context
 import { useAuth } from '@/hooks/useAuth';
-import { RootContextProvider } from '@/context/RootContext';
+import { RootContextProvider } from '@/context/rootContext';
 // components
 import { Providers } from '@/components/Providers';
 

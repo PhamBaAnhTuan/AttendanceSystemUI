@@ -1,41 +1,53 @@
 "use client";
 
-import { API_BASE } from "@/constants/api";
-import { message } from "antd";
+import { API } from "@/constants/api";
 import axios from "axios";
 import React, { createContext, useContext, useEffect, useState } from "react";
-
-const url = API_BASE
+import { useAuth } from "@/hooks/useAuth";
+import { getUserInfo } from '@/store/authSlice'
+import { useAppDispatch } from '@/hooks/useDispatch';
 
 interface ContextType {
 	// isAuthenticated: boolean;
 	// setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
 	// token: string | null;
-	// user: any;
+	user: any | object;
 	// setUser: React.Dispatch<React.SetStateAction<any>>;
 	// signin: (values: []) => void;
 	// signout: () => void;
-	messageApi: any;
-	contextHolder: React.ReactNode;
-	loading: boolean;
-	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const RootContext = createContext<ContextType | undefined>(undefined);
 
 export const RootContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [loading, setLoading] = useState(false);
-	const [messageApi, contextHolder] = message.useMessage();
+	const { token } = useAuth();
+	const dispatch = useAppDispatch()
+	const [user, setUser] = useState<ContextType>();
 
-	// useEffect(() => {
-	// 	const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
-	// 	setIsAuthenticated(!!token);
-	// }, []);
+	useEffect(() => {
+		fetchUserInfo()
+	}, [token]);
+	const fetchUserInfo = async () => {
+		try {
+			if (!token) {
+				throw new Error("No authentication token found");
+			} else {
+				const res = await axios.get(`${API.USER_INFO}`, {
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				});
+				dispatch(getUserInfo(res.data));
+				console.log("User info fetched successfully:", res.data);
+			}
+		} catch (error) {
+			console.error("Failed to fetch user info:", error);
+		}
+	}
 
 	return <RootContext.Provider
 		value={{
-			messageApi, contextHolder,
-			loading, setLoading
+			user
 		}}>
 		{children}
 	</RootContext.Provider>;

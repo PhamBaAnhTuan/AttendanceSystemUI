@@ -3,7 +3,7 @@ import '@/styles/globals.css';
 import React from 'react';
 import { ConfigProvider } from 'antd';
 // context
-import { RootContextProvider } from '@/context/RootContext';
+import { RootContextProvider } from '@/context/rootContext';
 import { MessageProvider } from '@/context/messageContext';
 // components
 import { Providers } from '@/components/Providers';

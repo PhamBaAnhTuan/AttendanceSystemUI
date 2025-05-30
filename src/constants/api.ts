@@ -6,9 +6,9 @@ export const API_URL = "http://127.0.0.1:8000/api";
 export const CLOUD_URL = "https://api.cloudinary.com/v1_1/dx69v1c83/image/upload";
 
 export const API = {
-	USERS: `${API_BASE}/user/`,
-	TEACHERS: `${API_BASE}/user/?role_id=teacher`,
+	USER_INFO: `${API_BASE}/user/userinfo/`,
 
+	TEACHERS: `${API_BASE}/user/?role_id=teacher`,
 	TEACHER_SUBJECT: `${API_BASE}/api/teacher-subject/`,
 	TEACHER_CLASS: `${API_BASE}/api/teacher-class/`,
 

@@ -244,7 +244,7 @@ const AddSchedulePage = () => {
          });
          console.log('Post schedule res:', res);
          showMessage('success', 'Đặt thời khóa biểu thành công!');
-         router.replace(`/schedule`);
+         router.replace(`/`);
       } catch (error: any) {
          const errorData = error?.response?.data;
          if (errorData?.non_field_errors?.[0] === 'The fields date, room_id, period_id must make a unique set.') {

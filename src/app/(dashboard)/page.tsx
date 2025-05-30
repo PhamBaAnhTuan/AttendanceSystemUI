@@ -10,6 +10,7 @@ import type { SearchProps } from 'antd/es/input/Search';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useMessageContext } from '@/context/messageContext';
+import { useRootContext } from '@/context/rootContext';
 // utils
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -20,7 +21,7 @@ import { normalizeString } from '@/utils/normalizeString';
 import { columns, TableDataType } from '@/types/types';
 
 const Schedule = () => {
-   const { token, scope, isAdmin } = useAuth()
+   const { token, scope, isAdmin, info } = useAuth()
    const { showMessage } = useMessageContext()
    const [loading, setLoading] = useState(false);
 
@@ -54,14 +55,16 @@ const Schedule = () => {
    // teacher
    const [teacherList, setTeacherList]: any = useState([]);
    const [teacherSelected, setTeacherSelected]: any = useState();
-   // subject
+   // shift
    const [shiftList, setShiftList]: any = useState([]);
    const [shiftSelected, setShiftSelected]: any = useState();
    // subject
    const [subjectList, setSubjectList]: any = useState([]);
+   const [teacherSubjectList, setTeacherSubjectList]: any = useState([]);
    const [subjectSelected, setSubjectSelected]: any = useState();
    // class
    const [classList, setClassList]: any = useState([]);
+   const [teacherClassList, setTeacherClassList]: any = useState([]);
    const [classSelected, setClassSelected]: any = useState();
    // room
    const [roomList, setRoomList]: any = useState([]);
@@ -71,11 +74,13 @@ const Schedule = () => {
       console.log(
          '🔥 Is Admin: ', isAdmin,
          '\n🔥 Scope: ', scope,
+         '\n🔥 User info: ', info,
          '\n🔥 Schedule: ', schedule,
 
          '\n Date selected: ', dateSelected,
 
          '\n\n Teacher list: ', teacherList,
+         '\n Teacher-Subject list: ', teacherSubjectList,
          '\n Teacher selected: ', teacherSelected,
 
          '\n\n Shift list: ', shiftList,
@@ -85,6 +90,7 @@ const Schedule = () => {
          '\n Room selected: ', roomSelected,
          // 
          '\n\n Class list: ', classList,
+         '\n Teacher-Class list: ', teacherClassList,
          '\n Class selected: ', classSelected,
          // 
          '\n\n Subject list: ', subjectList,
@@ -95,10 +101,14 @@ const Schedule = () => {
    useEffect(() => {
       getPeriodList()
       getRoomList()
-      getClassList()
-      getSubjectList()
       if (isAdmin) {
          getTeacherList()
+         getClassList()
+         getSubjectList()
+      } else {
+         getTeacherSubjectList()
+         getTeacherClassList()
+         setTeacherSelected(info.id)
       }
       handleQuery(true)
    }, [])
@@ -129,10 +139,40 @@ const Schedule = () => {
          console.error('Failed to fetch Teacher list:', error?.response?.data || error?.message);
       }
    }
+   //
+   const getTeacherSubjectList = async () => {
+      try {
+         const res = await axios.get(`${API.TEACHER_SUBJECT}?teacher_id=${info.id}`, {
+            headers: {
+               Authorization: `Bearer ${token}`
+            }
+         })
+         const data = res.data
+         console.log('Get Teacher-Subject list res:', data);
+         setTeacherSubjectList(data);
+      } catch (error: any) {
+         console.error('Failed to fetch Teacher-Subject list:', error?.response?.detail || error?.message);
+      }
+   }
+   //
+   const getTeacherClassList = async () => {
+      try {
+         const res = await axios.get(`${API.TEACHER_CLASS}?teacher_id=${info.id}`, {
+            headers: {
+               Authorization: `Bearer ${token}`
+            }
+         })
+         const data = res.data
+         console.log('Get Teacher-Class list res:', data);
+         setTeacherClassList(data);
+      } catch (error: any) {
+         console.error('Failed to fetch Teacher-Class list:', error?.response?.detail || error?.message);
+      }
+   }
    // 
    const teacherOptions: SelectProps['options'] = teacherList.map((teacher: any) => ({
-      label: teacher.fullname,
-      value: teacher.id
+      label: teacher?.fullname,
+      value: teacher?.id
    }));
    const handleTeacherSelected = (value: any) => {
       setTeacherSelected(value)
@@ -185,10 +225,14 @@ const Schedule = () => {
       }
    }
    // 
-   const subjectOptions: SelectProps['options'] = subjectList.map((subject: any) => ({
+   const subjectOptions: SelectProps['options'] = subjectList.length > 0 ? subjectList.map((subject: any) => ({
       label: subject.name,
       value: subject.id
-   }));
+   }))
+      : teacherSubjectList.map((subject: any) => ({
+         label: subject?.subject.name,
+         value: subject?.subject.id
+      }))
    const handleSubjectSelected = (value: any) => {
       setSubjectSelected(value);
    };
@@ -208,10 +252,18 @@ const Schedule = () => {
       }
    };
    // 
-   const classOptions: SelectProps['options'] = classList.map((cls: any) => ({
+   const classOptions: SelectProps['options'] = classList.length > 0 ? classList.map((cls: any) => ({
       label: cls.name,
       value: cls.id
-   }));
+   }))
+      : teacherClassList.map((cls: any) => ({
+         label: cls?.classes.name,
+         value: cls?.classes.id
+      }))
+   // const classOptions: SelectProps['options'] = teacherClassList.map((cls: any) => ({
+   //    label: cls?.classes.name,
+   //    value: cls?.classes.id
+   // }))
    const handleClassSelected = (value: any) => {
       setClassSelected(value);
    };
@@ -246,7 +298,9 @@ const Schedule = () => {
       if (isQueryAll) {
          setDateSelected(undefined)
          setShiftSelected(undefined)
-         setTeacherSelected(undefined)
+         if (isAdmin) {
+            setTeacherSelected(undefined)
+         } else if (teacherSelected) query += `${query ? '&' : '?'}teacher_id=${teacherSelected}`;
          setRoomSelected(undefined)
          setClassSelected(undefined)
          setSubjectSelected(undefined)
@@ -323,8 +377,7 @@ const Schedule = () => {
                   )
                }
             />
-            <Select
-               popupClassName='yes'
+            {isAdmin && <Select
                allowClear
                size='large'
                title='Tìm giáo viên'
@@ -339,7 +392,7 @@ const Schedule = () => {
                      normalizeString(input)
                   )
                }
-            />
+            />}
 
             <Select
                allowClear
@@ -413,12 +466,12 @@ const Schedule = () => {
                scroll={{ x: 'max-content', y: 'calc(100vh - 230px)' }}
             />
          </div>
-         {/* <Button
+         <Button
             color="primary"
             variant="solid"
             size='large'
             onClick={log}
-         ><h5>LOG</h5></Button> */}
+         ><h5>LOG</h5></Button>
       </div>
    )
 }
