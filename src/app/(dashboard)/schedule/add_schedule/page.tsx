@@ -23,7 +23,7 @@ import type { CheckboxOptionType, GetProp } from 'antd';
 
 const AddSchedulePage = () => {
    const router = useRouter();
-   const { token, isAdmin } = useAuth()
+   const { token, isAdmin, info } = useAuth()
    const [form] = Form.useForm();
    const [loading, setLoading] = useState(false);
    const { showMessage } = useMessageContext()
@@ -35,24 +35,21 @@ const AddSchedulePage = () => {
    const [shiftList, setShiftList]: any = useState([]);
    const [shiftSelected, setShiftSelected]: any = useState([]);
    // subject
-   const [teacherSubjectList, setTeacherSubjectList]: any = useState([]);
+   const [teacherSubjectRelation, setTeacherSubjectRelation]: any = useState([]);
    const [subjectSelected, setSubjectSelected]: any = useState([]);
+
+   const [teacherClassSubjectList, setTeacherClassSubjectList]: any = useState([]);
    // class
-   const [teacherClassList, setTeacherClassList]: any = useState([]);
+   const [classList, setClassList]: any = useState([]);
    const [classSelected, setClassSelected]: any = useState([]);
    // room
    const [roomList, setRoomList]: any = useState([]);
    const [roomSelected, setRoomSelected]: any = useState([]);
 
-   const onChange: GetProp<typeof Checkbox.Group, 'onChange'> = (checkedValues) => {
-      console.log('checked = ', checkedValues);
-   };
-
-   const plainOptions = ['Apple', 'Pear', 'Orange'];
-
    const log = () => {
       console.log(
          '🔥 Is Admin: ', isAdmin,
+         '\n🔥 Info: ', info,
 
          '\n\n Teacher list: ', teacherList,
          '\n Teacher selected: ', teacherSelected,
@@ -63,10 +60,8 @@ const AddSchedulePage = () => {
          '\n\n Room list: ', roomList,
          '\n Room selected: ', roomSelected,
          // 
-         '\n\n Teacher-Class list: ', teacherClassList,
+         '\n\n Teacher-Class-Subject list: ', teacherClassSubjectList,
          '\n Class selected: ', classSelected,
-         // 
-         '\n\n Teacher-Subject list: ', teacherSubjectList,
          '\n Subject selected: ', subjectSelected,
       );
    }
@@ -74,18 +69,35 @@ const AddSchedulePage = () => {
    useEffect(() => {
       getPeriodList()
       getRoomList()
-      // getClassList()
-      // getSubjectList()
       if (isAdmin) {
          getTeacherList()
+      } else {
+         // Nếu không phải admin, lấy danh sách giáo viên từ thông tin người dùng
+         setTeacherSelected(info?.id);
+         getTeacherClassSubjectList(info?.id);
+         form.setFieldValue('teacher_id', info?.id);
+         form.setFieldValue('fullname', info?.fullname);
       }
    }, [])
    useEffect(() => {
       if (teacherSelected.length > 0) {
-         getTeacherClassList(teacherSelected)
-         getTeacherSubjectList(teacherSelected)
+         getTeacherSubjectRelation(teacherSelected);
+         setSubjectSelected(undefined)
+         setClassSelected(undefined)
       }
    }, [teacherSelected])
+   useEffect(() => {
+      setClassSelected(undefined)
+      form.resetFields(['class_id']);
+      if (subjectSelected?.length > 0 || []) {
+         const classes = teacherClassSubjectList.filter((obj: any) => {
+            return obj?.subject?.id === subjectSelected
+         })
+         const classFiltered = classes.map((cls: any) => cls?.classes);
+         console.log('Classes for selected subject:', classFiltered);
+         setClassList(classFiltered);
+      }
+   }, [subjectSelected])
 
    // 
    const getTeacherList = async () => {
@@ -103,22 +115,7 @@ const AddSchedulePage = () => {
       }
    }
    // 
-   const getTeacherClassList = async (teacherID: string) => {
-      try {
-         const res = await axios.get(`${API.TEACHER_CLASS}?teacher_id=${teacherID}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Teacher-Class list res:', data);
-         setTeacherClassList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Teacher-Class list:', error?.response?.data || error?.message);
-      }
-   }
-   // 
-   const getTeacherSubjectList = async (teacherID: string) => {
+   const getTeacherSubjectRelation = async (teacherID: string | undefined) => {
       try {
          const res = await axios.get(`${API.TEACHER_SUBJECT}?teacher_id=${teacherID}`, {
             headers: {
@@ -127,9 +124,25 @@ const AddSchedulePage = () => {
          })
          const data = res.data
          console.log('Get Teacher-Subject list res:', data);
-         setTeacherSubjectList(data);
+         const subjectObj = data.map((item: any) => item.subject);
+         setTeacherSubjectRelation(subjectObj);
       } catch (error: any) {
          console.error('Failed to fetch Teacher-Subject list:', error?.response?.data || error?.message);
+      }
+   }
+   // 
+   const getTeacherClassSubjectList = async (teacherID: string | undefined) => {
+      try {
+         const res = await axios.get(`${API.TEACHER_CLASS_SUBJECT}?teacher_id=${teacherID}`, {
+            headers: {
+               Authorization: `Bearer ${token}`
+            }
+         })
+         const data = res.data
+         console.log('Get Teacher-Class-Subject list res:', data);
+         setTeacherClassSubjectList(data);
+      } catch (error: any) {
+         console.error('Failed to fetch Teacher-Class-Subject list:', error?.response?.detail || error?.message);
       }
    }
    // 
@@ -189,17 +202,26 @@ const AddSchedulePage = () => {
       setShiftSelected(value);
    };
    // 
-   const subjectOptions: SelectProps['options'] = teacherSubjectList.map((subject: any) => ({
-      label: subject?.subject?.name,
-      value: subject?.subject?.id
+   // const uniqueSubjectMap = new Map<string, any>();
+   // teacherClassSubjectList.forEach((subject: any) => {
+   //    const subjectName = subject?.subject?.name;
+   //    if (!uniqueSubjectMap.has(subjectName)) {
+   //       uniqueSubjectMap.set(subjectName, subject);
+   //       console.log('Subject mapping:', subject);
+   //       console.log('Unique subject added:', uniqueSubjectMap);
+   //    }
+   // });
+   const subjectOptions: SelectProps['options'] = Array.from(teacherSubjectRelation.values()).map((subject: any) => ({
+      label: subject?.name,
+      value: subject?.id
    }));
    const handleSubjectSelected = (value: any) => {
       setSubjectSelected(value);
    };
    // 
-   const classOptions: SelectProps['options'] = teacherClassList.map((cls: any) => ({
-      label: cls?.classes?.name,
-      value: cls?.classes?.id
+   const classOptions: SelectProps['options'] = Array.from(classList.values()).map((cls: any) => ({
+      label: cls?.name,
+      value: cls?.id
    }));
    const handleClassSelected = (value: any) => {
       setClassSelected(value);
@@ -216,7 +238,7 @@ const AddSchedulePage = () => {
    // Hàm xử lý submit form
    const handleSubmit = async (values: any) => {
       log()
-      console.log('Form values: ', values)
+      // console.log('Form values: ', values)
       setLoading(true);
       try {
          const formData = new FormData();
@@ -246,11 +268,13 @@ const AddSchedulePage = () => {
          showMessage('success', 'Đặt thời khóa biểu thành công!');
          router.replace(`/`);
       } catch (error: any) {
-         const errorData = error?.response?.data;
+         const errorData = error?.response?.data?.detail;
          if (errorData?.non_field_errors?.[0] === 'The fields date, room_id, period_id must make a unique set.') {
             showMessage('error', `Ca ${shiftSelected} trong ngày ${dayjs(values.date).format(formatDate)} đã được đặt trước, vui lòng chọn ca khác!`)
+         } else if (errorData === 'You do not have permission to perform this action.') {
+            showMessage('error', 'Bạn không có quyền thực hiện hành động này!');
          }
-         console.error('Lỗi chi tiết từ server:', error);
+         console.error('Lỗi chi tiết từ server:', errorData);
       } finally {
          setLoading(false);
       }
@@ -297,7 +321,14 @@ const AddSchedulePage = () => {
                label="ID Giáo Viên"
                name="teacher_id"
             >
-               <Input />
+               <Input disabled />
+            </Form.Item>}
+
+            {!isAdmin && <Form.Item
+               label="Tên Giáo Viên"
+               name="fullname"
+            >
+               <Input disabled />
             </Form.Item>}
 
             <Form.Item
@@ -356,6 +387,26 @@ const AddSchedulePage = () => {
             </Form.Item>
 
             <Form.Item
+               label="Môn học"
+               name="subject_id"
+               rules={[{ required: true, message: 'Vui lòng nhập Môn học!' }]}
+            >
+               <Select
+                  showSearch
+                  style={{ width: '100%' }}
+                  placeholder="Chọn môn"
+                  value={subjectSelected}
+                  onChange={handleSubjectSelected}
+                  options={subjectOptions}
+                  filterOption={(input, option) =>
+                     normalizeString(option?.label?.toString() || '').includes(
+                        normalizeString(input)
+                     )
+                  }
+               />
+            </Form.Item>
+
+            <Form.Item
                label="Lớp học"
                name="class_id"
                rules={[{ required: true, message: 'Vui lòng nhập Lớp học!' }]}
@@ -375,25 +426,6 @@ const AddSchedulePage = () => {
                />
             </Form.Item>
 
-            <Form.Item
-               label="Môn học"
-               name="subject_id"
-               rules={[{ required: true, message: 'Vui lòng nhập Môn học!' }]}
-            >
-               <Select
-                  showSearch
-                  style={{ width: '100%' }}
-                  placeholder="Chọn môn"
-                  value={subjectSelected}
-                  onChange={handleSubjectSelected}
-                  options={subjectOptions}
-                  filterOption={(input, option) =>
-                     normalizeString(option?.label?.toString() || '').includes(
-                        normalizeString(input)
-                     )
-                  }
-               />
-            </Form.Item>
             <Button type="primary" htmlType="submit"
                loading={loading}
                className='log-button'
@@ -401,9 +433,9 @@ const AddSchedulePage = () => {
                <h4>Thêm</h4>
             </Button>
          </Form>
-         {/* <Button onClick={log}>
+         <Button onClick={log}>
             <h4>LOG</h4>
-         </Button> */}
+         </Button>
       </div>
    );
 };

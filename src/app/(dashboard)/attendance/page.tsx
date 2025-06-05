@@ -1,20 +1,26 @@
+
 'use client';
+import './attendance.css';
+import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
 import { API } from '@/constants/api';
 import { Button } from 'antd';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+// hooks
 import { useAuth } from '@/hooks/useAuth';
-import axios from 'axios';
+import { useMessageContext } from '@/context/messageContext';
 
 function StreamCamera() {
    const { token } = useAuth();
    const router = useRouter();
+   const searchParams = useSearchParams();
+   const sessionID = searchParams.get('sessionID');
    const videoRef = useRef<HTMLVideoElement>(null);
 
+   const { showMessage } = useMessageContext();
    const [images, setImages] = useState<string[]>([]);
    const [isCapturing, setIsCapturing] = useState(false);
    const [instruction, setInstruction] = useState('');
-   const [sessionId, setSessionId] = useState<string | null>(null);
    const [recognizedStudents, setRecognizedStudents] = useState<any[]>([]);
 
    // Hướng dẫn từng ảnh
@@ -33,19 +39,7 @@ function StreamCamera() {
          }
       };
 
-      const createAttendanceSession = async () => {
-         try {
-            const res = await axios.post(`${API.ATTENDANCE}attendance/`, {}, {
-               headers: { Authorization: `Bearer ${token}` }
-            });
-            setSessionId(res.data?.id);
-         } catch (err) {
-            console.error('Không thể tạo session điểm danh:', err);
-         }
-      };
-
       startCamera();
-      createAttendanceSession();
 
       return () => {
          if (videoRef.current?.srcObject) {
@@ -64,25 +58,32 @@ function StreamCamera() {
 
    // Gửi ảnh nhận diện
    const sendToAttendanceSession = async (imageBlob: Blob) => {
-      if (!sessionId) return;
+      if (!sessionID) return;
 
       const formData = new FormData();
       formData.append('image', imageBlob);
 
       try {
          const res = await axios.post(
-            `${API.ATTENDANCE}attendance/${sessionId}/take_attendance/`,
+            `${API.ATTENDANCE}${sessionID}/take_attendance/`,
             formData,
             {
                headers: { Authorization: `Bearer ${token}` },
             }
          );
-
-         if (res.data?.student) {
-            setRecognizedStudents((prev) => [...prev, res.data.student]);
+         const data = res.data;
+         console.log('Kết quả nhận diện:', data);
+         if (data?.marked_students) {
+            setRecognizedStudents((prevStudents) => {
+               const newStudents = data.marked_students.filter(
+                  (student: any) => !prevStudents.some(s => s.student_id === student.student_id)
+               );
+               return [...prevStudents, ...newStudents];
+            });
          }
-      } catch (error) {
-         console.error('Lỗi gửi ảnh lên nhận diện:', error);
+
+      } catch (error: any) {
+         console.error('Lỗi gửi ảnh lên nhận diện:', error.response.data);
       }
    };
 
@@ -106,7 +107,7 @@ function StreamCamera() {
 
    // Tiến trình chụp 3 ảnh
    const startFullCaptureSequence = async () => {
-      if (!sessionId) return;
+      if (!sessionID) return;
       setIsCapturing(true);
       for (let i = 0; i < directions.length; i++) {
          setInstruction(directions[i]);
@@ -116,52 +117,66 @@ function StreamCamera() {
       setInstruction('✅ Đã hoàn tất điểm danh');
       setIsCapturing(false);
    };
+   // End attendance session
+   const endAttendanceSession = async () => {
+      if (!sessionID) return;
+
+      try {
+         const res = await axios.post(
+            `${API.ATTENDANCE}${sessionID}/end-session/`,
+            { end_session: true },
+            {
+               headers: { Authorization: `Bearer ${token}` },
+            }
+         );
+         const data = res.data;
+         console.log('End session res: ', data);
+         if (data) {
+            showMessage('success', 'Phiên điểm danh đã kết thúc thành công!');
+            router.replace('/attendance/attendance_list');
+         }
+      } catch (error) {
+         console.error('End session error: ', error);
+      }
+   };
 
    return (
-      <div className='camera-container'>
-         <h1 className='heading'>Điểm danh sinh viên</h1>
-         <video ref={videoRef} autoPlay playsInline className='video' />
+      <div className="camera-container">
 
-         <div style={{ marginTop: 16, fontSize: 18, fontWeight: 500, color: '#555' }}>
-            {sessionId
-               ? instruction || 'Đã sẵn sàng điểm danh'
-               : '⏳ Đang tạo phiên điểm danh...'}
+         <div className="left-panel">
+            <h1 className="heading">Điểm danh sinh viên</h1>
+            <video ref={videoRef} autoPlay playsInline className="video" />
+            <div style={{ marginTop: 16, fontSize: 18, fontWeight: 500, color: '#555' }}>
+               {sessionID
+                  ? instruction || 'Đã sẵn sàng điểm danh'
+                  : '⏳ Đang tạo phiên điểm danh...'}
+            </div>
+            <div className="buttonGroup">
+               <Button type="primary" onClick={startFullCaptureSequence} disabled={isCapturing || !sessionID}>
+                  <h4>{isCapturing ? 'Đang chụp...' : 'Bắt đầu chụp'}</h4>
+               </Button>
+               <Button danger onClick={endAttendanceSession} disabled={isCapturing}>
+                  <h4>Thoát</h4>
+               </Button>
+            </div>
          </div>
 
-         <div className='buttonGroup' style={{ marginTop: 24 }}>
-            <Button type="primary" onClick={startFullCaptureSequence} disabled={isCapturing || !sessionId}>
-               <h4>{isCapturing ? 'Đang chụp...' : 'Bắt đầu chụp'}</h4>
-            </Button>
-            <Button danger onClick={() => router.replace('/')} disabled={isCapturing}>
-               <h4>Thoát</h4>
-            </Button>
+         <div className="right-panel">
+            <h3>Danh sách sinh viên đã nhận diện</h3>
+            {recognizedStudents.length === 0 ? (
+               <p>Chưa có sinh viên nào được nhận diện.</p>
+            ) : (
+               recognizedStudents.map((sv, idx) => (
+                  <div key={idx} className="student-item">
+                     <strong>{sv.student_id} - {sv.student_name}</strong>
+                     <small>Thời gian: {new Date(sv.recognized_time || Date.now()).toLocaleTimeString()}</small>
+                  </div>
+               ))
+            )}
          </div>
-
-         {images.length > 0 && (
-            <div className='imageList'>
-               <h3>Ảnh đã chụp:</h3>
-               <div className='imageGrid'>
-                  {images.map((img, idx) => (
-                     <img key={idx} src={img} className='imageItem' alt={`capture-${idx}`} />
-                  ))}
-               </div>
-            </div>
-         )}
-
-         {recognizedStudents.length > 0 && (
-            <div style={{ marginTop: 20 }}>
-               <h3>✅ Danh sách sinh viên đã điểm danh:</h3>
-               <ul>
-                  {recognizedStudents.map((sv, idx) => (
-                     <li key={idx}>
-                        {sv.name} - {sv.student_id}
-                     </li>
-                  ))}
-               </ul>
-            </div>
-         )}
       </div>
    );
+
 }
 
 export default StreamCamera;

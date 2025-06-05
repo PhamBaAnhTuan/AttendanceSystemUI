@@ -6,13 +6,18 @@ export const API_URL = "http://127.0.0.1:8000/api";
 export const CLOUD_URL = "https://api.cloudinary.com/v1_1/dx69v1c83/image/upload";
 
 export const API = {
+	USERS: `${API_BASE}/user/`,
 	USER_INFO: `${API_BASE}/user/userinfo/`,
 
 	TEACHERS: `${API_BASE}/user/?role_id=teacher`,
 	TEACHER_SUBJECT: `${API_BASE}/api/teacher-subject/`,
 	TEACHER_CLASS: `${API_BASE}/api/teacher-class/`,
+	TEACHER_CLASS_SUBJECT: `${API_BASE}/api/teacher-class-subject/`,
 
 	STUDENTS: `${API_BASE}/user/?role_id=student`,
+	STUDENT_CLASS: `${API_BASE}/api/student-class/`,
+
+	FACULTY: `${API_BASE}/api/faculty/`,
 	MAJOR: `${API_BASE}/api/major/`,
 
 	CLASSES: `${API_BASE}/api/classes/`,
@@ -25,7 +30,7 @@ export const API = {
 	ROOM_SUBJECT: `${API_BASE}/api/room-subject/`,
 
 	ATTENDANCE: `${API_BASE}/face_recog/attendance/`,
-	// ATTENDANCE: `${API_BASE}/attendance/take_attendance/`,
+	FACE_TRAINING: `${API_BASE}/face_recog/face_training/`,
 
 	PERIOD: `${API_BASE}/api/period/`,
 	SCHEDULE: `${API_BASE}/api/schedule/`,

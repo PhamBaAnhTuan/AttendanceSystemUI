@@ -4,46 +4,108 @@ import React, { useEffect, useState } from 'react';
 // import '../subject.css';
 import { useRouter } from 'next/navigation';
 import { API } from '@/constants/api';
-import { Button, Input, Form, message } from 'antd';
+import { Button, Input, Form, SelectProps, Select } from 'antd';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
+import { useMessageContext } from '@/context/messageContext';
+// utils
+import { normalizeString } from '@/utils/normalizeString';
 
 const AddSubjectPage = () => {
    const { token } = useAuth()
    const router = useRouter();
    const [form] = Form.useForm();
    const [loading, setLoading] = useState(false);
+   const { showMessage } = useMessageContext()
 
-   const log = () => {
-      console.log(
-         // 'Img name: ', imgFileName,
-      );
-   }
-   // Hàm xử lý submit form
-   const handleSubmit = async (values: any) => {
-      // console.log('Form values:', values);
+   // faculty
+   const [facultyList, setFacultyList]: any = useState([]);
+   const [facultySelected, setFacultySelected]: any = useState([]);
+   // major
+   const [majorList, setMajorList]: any = useState([]);
+   const [majorSelected, setMajorSelected]: any = useState([]);
+
+   useEffect(() => {
+      getFacultyList()
+   }, [])
+   useEffect(() => {
+      getMajorList(facultySelected)
+      setMajorSelected(undefined);
+      form.setFieldsValue({ major_id: undefined });
+   }, [facultySelected])
+   // 
+   const getFacultyList = async () => {
       setLoading(true);
       try {
-         const response = await axios.post(API.SUBJECTS, values, {
+         const res = await axios.get(`${API.FACULTY}`, {
+            headers: {
+               Authorization: `Bearer ${token}`
+            }
+         })
+         const data = res.data
+         console.log('Get Faculty list res:', data);
+         setFacultyList(data);
+      } catch (error: any) {
+         console.error('Failed to fetch Faculty list:', error?.response?.data || error?.message);
+      } finally {
+         setLoading(false);
+      }
+   };
+   // 
+   const getMajorList = async (facultyID: string) => {
+      setLoading(true);
+      try {
+         const res = await axios.get(`${API.MAJOR}?faculty_id=${facultyID}`, {
+            headers: {
+               Authorization: `Bearer ${token}`
+            }
+         })
+         const data = res.data
+         console.log('Get Major list res:', data);
+         setMajorList(data);
+
+      } catch (error: any) {
+         console.error('Failed to fetch Major list:', error?.response?.data || error?.message);
+      } finally {
+         setLoading(false);
+      }
+   };
+
+   // 
+   const facultyOptions: SelectProps['options'] = facultyList.map((faculty: any) => ({
+      label: faculty.name,
+      value: faculty.id
+   }));
+   const handleFacultySelected = (value: any) => {
+      setFacultySelected(value);
+   };
+   // 
+   const majorOptions: SelectProps['options'] = majorList.map((major: any) => ({
+      label: major.name,
+      value: major.id
+   }));
+   const handleMajorSelected = (value: any) => {
+      setMajorSelected(value);
+   };
+
+   // Hàm xử lý submit form
+   const handleSubmit = async (values: any) => {
+      setLoading(true);
+      try {
+         const res = await axios.post(API.SUBJECTS, values, {
             headers: {
                'Authorization': `Bearer ${token}`
             }
          })
-         console.log('Post subject res:', response);
-         message.success('Thêm môn học thành công!');
+         // console.log('Post subject res:', res);
+         showMessage('success', 'Thêm môn học thành công!');
          router.replace('/subject');
       } catch (error: any) {
          const errorData = error?.response?.data;
-         // Kiểm tra lỗi cụ thể
-         if (errorData?.id?.[0] === 'subject with this id already exists.') {
-            message.error('ID môn học đã tồn tại, vui lòng nhập ID khác');
-         } if (errorData?.name?.[0] === 'subject with this name already exists.') {
-            message.error('Tên môn học đã tồn tại, vui lòng nhập tên khác!');
-         } else {
-            // Lỗi không xác định
-            message.error(`Lỗi không xác định: ${JSON.stringify(errorData)}`);
+         if (errorData?.name?.[0] === 'subject with this name already exists.') {
+            showMessage('error', 'Tên môn học đã tồn tại, vui lòng nhập tên khác!');
          }
-         console.error('Lỗi chi tiết từ server:', errorData);
+         console.error('Post Subject error: ', error);
       } finally {
          setLoading(false);
       }
@@ -60,11 +122,43 @@ const AddSubjectPage = () => {
             onFinish={handleSubmit}
          >
             <Form.Item
-               label="ID môn học"
-               name="id"
-               rules={[{ required: true, message: 'Vui lòng nhập ID môn học!' }]}
+               label="Khoa"
+               name='faculty_id'
+               rules={[{ required: true, message: 'Vui lòng chọn Khoa!' }]}
             >
-               <Input />
+               <Select
+                  showSearch
+                  style={{ width: '100%' }}
+                  placeholder="Chọn khoa"
+                  value={facultySelected}
+                  onChange={handleFacultySelected}
+                  options={facultyOptions}
+                  filterOption={(input, option) =>
+                     normalizeString(option?.label?.toString() || '').includes(
+                        normalizeString(input)
+                     )
+                  }
+               />
+            </Form.Item>
+
+            <Form.Item
+               label="Ngành"
+               name="major_id"
+               rules={[{ required: true, message: 'Vui lòng chọn Ngành!' }]}
+            >
+               <Select
+                  showSearch
+                  style={{ width: '100%' }}
+                  placeholder="Chọn ngành"
+                  value={majorSelected}
+                  onChange={handleMajorSelected}
+                  options={majorOptions}
+                  filterOption={(input, option) =>
+                     normalizeString(option?.label?.toString() || '').includes(
+                        normalizeString(input)
+                     )
+                  }
+               />
             </Form.Item>
 
             <Form.Item

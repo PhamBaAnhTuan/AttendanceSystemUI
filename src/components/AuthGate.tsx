@@ -19,7 +19,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
    useEffect(() => {
       if (!isAuthenticated) return;
-      console.log(
+      const log = () => console.log(
          'isAuthenticated: ', isAuthenticated,
          '\nisAdmin: ', isAdmin
       )

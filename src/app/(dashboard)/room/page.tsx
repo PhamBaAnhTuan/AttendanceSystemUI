@@ -3,27 +3,26 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 // import './room.css'
 import { useRouter } from 'next/navigation';
-import { Avatar, Button, List, message, Skeleton, Input } from 'antd';
+import { Button, List, message, Skeleton, Input } from 'antd';
 import { API } from '@/constants/api'
 // hooks
 import { useAuth } from '@/hooks/useAuth';
 // types
-import { ClassType } from '@/store/classSlice';
+import { EntityType } from '@/types/types';
 import { normalizeString } from '@/utils/normalizeString';
 
 const ClassPage = () => {
-   const router = useRouter();
-   const { user, token } = useAuth()
+   const { info, isAdmin, token } = useAuth()
 
    const [loading, setLoading] = useState(false);
 
    const [search, setSearch] = useState('');
-   const [rooms, setRooms] = useState<ClassType[]>([]);
-   const [filtered, setFiltered] = useState<ClassType[]>([]);
+   const [rooms, setRooms] = useState<EntityType[]>([]);
+   const [filtered, setFiltered] = useState<EntityType[]>([]);
 
    const log = () => {
       console.log(
-         '\nUser: ', user,
+         '\nUser: ', info,
          '\nToken: ', token,
       );
    }
@@ -92,21 +91,22 @@ const ClassPage = () => {
          </div>
 
 
-         <div style={{ height: '75vh', width: '72vw', overflow: 'auto', margin: '0 auto' }}>
+         <div style={{ height: '75vh', overflow: 'auto', margin: '0 auto' }}>
             <List
+               size='small'
                loading={loading}
                itemLayout="horizontal"
                dataSource={filtered}
                renderItem={(item: any) => (
                   <List.Item
                      actions={[
-                        <Button
+                        isAdmin && <Button
                            color="cyan" variant="filled"
                            href={`/room/update_room/${item.id}`}
                         >
                            <h5>Chỉnh sửa</h5>
                         </Button>,
-                        <Button
+                        isAdmin && <Button
                            color="danger" variant="filled"
                            onClick={() => confirmDelete(item.id, item.name)}
                         >

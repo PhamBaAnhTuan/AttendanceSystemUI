@@ -1,21 +1,16 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-// import './teacher.css'
-// import { useRouter } from 'next/navigation';
 import { Avatar, Button, List, message, Skeleton, Input } from 'antd';
 import { API } from '@/constants/api'
 // hooks
 import { useAuth } from '@/hooks/useAuth';
-// import { useAppDispatch } from '@/hooks/useDispatch';
 // types
 import { UserInfoType } from '@/types/types';
 // utils
 import { normalizeString } from '@/utils/normalizeString';
 
 const StudentPage = () => {
-   // const dispatch = useAppDispatch()
-   // const router = useRouter();
    const { token } = useAuth()
 
    const [loading, setLoading] = useState(false);
@@ -32,13 +27,12 @@ const StudentPage = () => {
    // }
 
    useEffect(() => {
-      getTeacherList(token)
+      getTeacherList()
    }, []);
 
-   const getTeacherList = async (token: string | any) => {
+   const getTeacherList = async () => {
       setLoading(true);
       try {
-         // const res = await axios.get(`${API.TEACHERS}/`, {
          const res = await axios.get(API.TEACHERS, {
             headers: {
                'Authorization': `Bearer ${token}`
@@ -47,10 +41,8 @@ const StudentPage = () => {
          const data = res.data
          setTeachers(data)
          console.log('Get teacher res: ', data);
-         // message.success('Lấy danh sách giáo viên thành công!');
       } catch (error: any) {
-         console.error('Failed to fetch teacher:', error?.response?.data || error?.message);
-         // message.error('Lấy danh sách giáo viên thất bại!');
+         console.error('Failed to fetch teacher:', error?.response?.detail || error?.message);
       } finally {
          setLoading(false);
       }
@@ -60,14 +52,14 @@ const StudentPage = () => {
       const normalizedSearch = normalizeString(search);
 
       const filteredData = teachers.filter(teacher =>
-         normalizeString(teacher.name || '').includes(normalizedSearch)
+         normalizeString(teacher.fullname || '').includes(normalizedSearch)
       );
 
       setFiltered(filteredData);
    }, [search, teachers]);
 
 
-   const confirmDelete = async (id: number, name: string) => {
+   const confirmDelete = async (id: string, name: string) => {
       if (confirm(`Bạn có chắc chắn muốn xóa giáo viên ${name} không?`)) {
          console.log('teacher id: ', id)
          try {
@@ -77,7 +69,7 @@ const StudentPage = () => {
             setFiltered(prev => prev.filter(s => s.id !== id));
          } catch (error: any) {
             message.error(`Xóa giáo viên ${name} thất bại!`);
-            console.log('Failed to delete teacher:', error?.response?.data || error?.message);
+            console.log('Failed to delete teacher:', error?.response?.detail || error?.message);
          }
       }
    };
@@ -117,8 +109,15 @@ const StudentPage = () => {
                         </Button>,
                         <Button
                            key={'2'}
+                           color="cyan" variant="filled"
+                           href={`/teacher/update_teacher_class_subject/${item.id}`}
+                        >
+                           <h5>Gán mối quan hệ với lớp</h5>
+                        </Button>,
+                        <Button
+                           key={'3'}
                            color="danger" variant="filled"
-                           onClick={() => confirmDelete(item.id, item.name)}
+                           onClick={() => confirmDelete(item.id, item.fullname)}
                         >
                            <h5>Xóa</h5>
                         </Button>

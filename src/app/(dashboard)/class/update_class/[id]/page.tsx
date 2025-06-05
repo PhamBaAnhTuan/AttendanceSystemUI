@@ -46,8 +46,6 @@ const UpdateClassPage = () => {
             }
             form.setFieldsValue(values);
             setInitialValues(values)
-            // console.log('Initial form values: ', initialValues)
-            // console.log('Form values: ', form.getFieldsValue())
          } catch (error: any) {
             console.error('Failed to fetch class:', error?.response?.data || error?.message);
          } finally {
@@ -60,16 +58,26 @@ const UpdateClassPage = () => {
 
 
    const onFinish = async (values: any) => {
-      // console.log('Initial form values: ', initialValues)
-      // console.log('Form values: ', form.getFieldsValue())
-      // const isChanged = isFormChanged(initialValues, values)
-      // console.log('is form changed: ', isChanged)
-      if (isFormChanged(initialValues, values)) {
-         const changedField = getChangedFields(initialValues, values)
-         // console.log('Some thing changed: ', changedField)
-         setLoading(true);
-         try {
-            const res = await axios.patch(`${API.CLASSES}${id}/`, changedField, {
+      const isFormChange = isFormChanged(initialValues, values);
+      if (!isFormChange) {
+         showMessage('info', 'Không có thay đổi nào!');
+         return;
+      }
+      try {
+         if (isFormChange) {
+            const changedFields = getChangedFields(initialValues, values)
+            setLoading(true);
+            const formData = new FormData();
+
+            Object.entries(changedFields).forEach(([key, value]) => {
+               formData.append(key, value);
+            });
+
+            for (const [key, value] of formData.entries()) {
+               console.log(`💥PUT ${key}:`, value);
+            }
+
+            const res = await axios.put(`${API.CLASSES}${id}/`, formData, {
                headers: {
                   'Authorization': `Bearer ${token}`,
                },
@@ -78,21 +86,17 @@ const UpdateClassPage = () => {
             console.log('Post class res: ', data);
             showMessage('success', 'Cập nhật lớp học thành công!');
             router.replace('/class');
-         } catch (error: any) {
-            const errorData = error.response?.data
-            if (errorData?.name?.[0] === 'class with this name already exists.') {
-               showMessage('error', 'Tên lớp học đã tồn tại, vui lòng nhập tên khác!');
-            }
-            console.error('Lỗi chi tiết từ server:', errorData);
-         } finally {
-            setLoading(false);
+         };
+      } catch (error: any) {
+         const errorData = error.response?.data
+         if (errorData?.name?.[0] === 'class with this name already exists.') {
+            showMessage('error', 'Tên lớp học đã tồn tại, vui lòng nhập tên khác!');
          }
-      } else {
-         showMessage('info', 'Không có thay đổi nào!')
-         // console.warn('Nothing changed!')
+         console.error('Update Class error: ', errorData);
+      } finally {
+         setLoading(false);
       }
-   };
-
+   }
    return (
       <div className="form-container">
          <h1 className="form-title">Cập nhật lớp học</h1>
@@ -118,14 +122,6 @@ const UpdateClassPage = () => {
             >
                <Input />
             </Form.Item>
-
-            {/* <Form.Item
-               label="Số tín chỉ"
-               name="credit"
-               rules={[{ required: true, message: 'Vui lòng nhập Số tín chỉ!' }]}
-            >
-               <Input />
-            </Form.Item> */}
 
             <Form.Item
                label="Mô tả"

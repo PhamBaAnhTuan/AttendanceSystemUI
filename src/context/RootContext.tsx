@@ -25,16 +25,19 @@ export const RootContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 	const [user, setUser] = useState<ContextType>();
 
 	useEffect(() => {
-		fetchUserInfo()
+		if (typeof token === "string" && token) {
+			fetchUserInfo(token);
+		}
 	}, [token]);
-	const fetchUserInfo = async () => {
+
+	const fetchUserInfo = async (access_token: string) => {
 		try {
 			if (!token) {
 				throw new Error("No authentication token found");
 			} else {
 				const res = await axios.get(`${API.USER_INFO}`, {
 					headers: {
-						Authorization: `Bearer ${token}`,
+						Authorization: `Bearer ${access_token}`,
 					},
 				});
 				dispatch(getUserInfo(res.data));

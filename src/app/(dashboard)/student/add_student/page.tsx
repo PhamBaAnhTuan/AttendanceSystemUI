@@ -1,13 +1,14 @@
 'use client'
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import '../student.css';
 import { useRouter } from 'next/navigation';
-import { API } from '@/constants/api';
-import { Button, Input, Form, message, Alert, Upload, SelectProps, Space, Select, DatePicker } from 'antd';
+import { API, API_AUTH, API_URL } from '@/constants/api';
+import { Button, Input, Form, Upload, Select, SelectProps, DatePicker } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
+import { useAppDispatch } from '@/hooks/useDispatch';
+import { useMessageContext } from '@/context/messageContext'
 // utils
 import { normalizeString } from '@/utils/normalizeString';
 import dayjs from 'dayjs';
@@ -21,13 +22,15 @@ const AddStudentPage = () => {
    const { token } = useAuth()
    const [form] = Form.useForm();
    const [loading, setLoading] = useState(false);
+   const { showMessage } = useMessageContext()
 
-   // class
+   // subject
    const [classList, setClassList]: any = useState([]);
    const [classSelected, setClassSelected]: any = useState([]);
 
    const log = () => {
       console.log(
+         // 'Img name: ', imgFileName,
          '\n Class list: ', classList,
          '\n Class selected: ', classSelected,
       );
@@ -36,17 +39,42 @@ const AddStudentPage = () => {
    useEffect(() => {
       getClassList()
    }, [])
+
    // 
    const getClassList = async () => {
       try {
-         const res = await axios.get(`${API.CLASSES}`)
+         const res = await axios.get(`${API.CLASSES}`, {
+            headers: {
+               Authorization: `Bearer ${token}`
+            }
+         })
          const data = res.data
-         console.log('Get class list res:', data);
+         console.log('Get Class list res:', data);
          setClassList(data);
       } catch (error: any) {
-         console.error('Failed to fetch class list:', error?.response?.data || error?.message);
+         console.error('Failed to fetch Class list:', error?.response?.detail || error?.message);
       }
-   };
+   }
+
+   // 
+   const addStudentClass = async (studentID: number, classID: number[]) => {
+      // console.log('Teacher ID: ', teacherID)
+      // console.log('Class ID: ', classID)
+      const payload = {
+         student_id: studentID,
+         class_id: classID
+      }
+      try {
+         await axios.post(
+            API.STUDENT_CLASS, payload,
+            { headers: { Authorization: `Bearer ${token}` } }
+         );
+         console.log(`➕ Thêm thành công Student-Class!`);
+      } catch (error) {
+         console.error(`❌ Lỗi thêm Student-Class: `, error);
+      }
+   }
+
    // 
    const classOptions: SelectProps['options'] = classList.map((cls: any) => ({
       label: cls.name,
@@ -54,8 +82,8 @@ const AddStudentPage = () => {
    }));
    const handleClassSelected = (value: any) => {
       setClassSelected(value);
-      form.setFieldValue('class_id', value)
    };
+
    // Pick picture
    const handleUploadChange = (info: any) => {
       const file = info.file.originFileObj
@@ -63,66 +91,55 @@ const AddStudentPage = () => {
 
       return file
    };
+
    // Hàm xử lý submit form
    const handleSubmit = async (values: any) => {
       setLoading(true);
       try {
          const formData = new FormData();
-         const fields = ['id', 'name', 'email', 'address', 'phone_number', 'class_id', 'date_of_birth', 'avatar'];
+         const fields = ['fullname', 'email', 'password', 'address', 'phone_number', 'date_of_birth', 'avatar', 'role'];
          fields.forEach(field => {
-            if (values[field]) {
-               let value = values[field];
-
-               if (field === 'date_of_birth') {
-                  try {
-                     value = dayjs(value).format(formatDate);
-                  } catch (err) {
-                     console.warn('Invalid date_of_birth format:', value);
-                  }
+            let value = values[field];
+            if (field === 'date_of_birth') {
+               try {
+                  value = dayjs(value).format(formatDate);
+               } catch (err) {
+                  console.warn('Invalid date_of_birth format:', value);
                }
-               // 
-               formData.append(field, value);
-               console.log(`🛹Append ${field}:`, value);
             }
+            if (field === 'role') {
+               value = 'student'
+            }
+            // 
+            formData.append(field, value);
+            console.log(`💥${field}:`, value);
          });
-         // Xử lý file ảnh
+
          if (values.avatar) {
-            const renamedFile = formatImageNameFile(values.avatar, values.class_id, values.fullname)
+            const renamedFile = formatImageNameFile(values.avatar, 'Student', values.fullname)
             formData.append('avatar', renamedFile);
          }
-         for (const [k, v] of formData.entries()) {
-            console.log(`🧪 Gửi ${k}:`, v);
-         }
 
-         const res = await axios.post(`${API.STUDENTS}`, formData, {
-            headers: {
-               'Authorization': `Bearer ${token}`,
-            },
-         });
-         const data = res.data
-         console.log('Post res:', data);
-         message.loading('Thêm sinh viên thành công!\nChuyển sang trang thêm nhận diện khuôn mặt');
-         if (data.id && data.name && data.class_id) {
-            router.replace(`/student/camera?id=${values.id}&name=${encodeURIComponent(values.name)}&class_id=${values.class_id}`);
+         const res = await axios.post(`${API_AUTH.SIGNUP}`, formData);
+         const newStudentID = res.data?.id
+         const newRole = res.data?.role.name
+         const newStudentFullname = res.data?.fullname
+         if (newStudentID) {
+            await addStudentClass(newStudentID, classSelected);
          }
+         showMessage('loading', 'Thêm sinh viên thành công!\nChuyển sang trang thêm nhận diện khuôn mặt');
+         router.replace(`/teacher/camera?id=${newStudentID}&role=${newRole}&fullname=${encodeURIComponent(newStudentFullname)}`);
+         // await addTeacherSubject(99, subjectSelected);
       } catch (error: any) {
-         const errorData = error?.response?.data;
-
+         const errorData = error?.response?.data?.detail;
          // Kiểm tra lỗi cụ thể
-         if (errorData?.id?.[0] === 'student with this id already exists.') {
-            message.error('ID sinh viên đã tồn tại, vui lòng nhập ID khác');
-         } else if (errorData?.email?.[0] === 'student with this email already exists.') {
-            message.error('Email này đã tồn tại, vui lòng nhập Email khác');
-         } else if (errorData?.class_id?.[0] === 'This field is required.') {
-            message.error('Vui lòng chọn lớp cho sinh viên');
-         } else if (errorData?.phone_number?.[0] === `student with this phone number already exists.`) {
-            message.error('Số điện thoại đã tồn tại, vui lòng nhập lại');
+         if (errorData === 'Email already exists!') {
+            showMessage('error', 'Email này đã tồn tại, vui lòng nhập Email khác!');
+         } else if (errorData === "Phone number already exists!") {
+            showMessage('error', 'Số điện thoại đã tồn tại, vui lòng nhập Số điện thoại khác!');
+         } else if (errorData?.class_id?.[0] === `“[]” is not a valid UUID.`) {
+            showMessage('error', 'Vui lòng nhập Lớp cho sinh viên!');
          }
-         else {
-            // Lỗi không xác định
-            message.error(`Lỗi không xác định: ${JSON.stringify(errorData)}`);
-         }
-
          console.error('Lỗi chi tiết từ server:', errorData);
       } finally {
          setLoading(false);
@@ -142,7 +159,7 @@ const AddStudentPage = () => {
          >
 
             <Form.Item
-               label="Tên sinh Viên"
+               label="Tên sinh viên"
                name="fullname"
                rules={[{ required: true, message: 'Vui lòng nhập Tên sinh viên!' }]}
             >
@@ -160,13 +177,13 @@ const AddStudentPage = () => {
             <Form.Item
                label="Password"
                name="password"
-               rules={[{ required: true, message: 'Vui lòng nhập password!' }]}
+               rules={[{ required: true, message: 'Vui lòng nhập Password!' }]}
             >
                <Input allowClear />
             </Form.Item>
 
             <Form.Item
-               label="Địa chỉ thường trú"
+               label="Địa chỉ"
                name="address"
                rules={[{ required: true, message: 'Vui lòng nhập Địa chỉ!' }]}
             >
@@ -195,7 +212,6 @@ const AddStudentPage = () => {
                rules={[{ required: true, message: 'Vui lòng chọn Lớp học!' }]}
             >
                <Select
-                  showSearch
                   style={{ width: '100%' }}
                   placeholder="Chọn lớp"
                   value={classSelected}
@@ -230,9 +246,6 @@ const AddStudentPage = () => {
                <h4>Thêm</h4>
             </Button>
          </Form>
-         {/* <Button style={{ width: '100%' }} onClick={log}>
-            Log
-         </Button> */}
       </div>
    );
 };

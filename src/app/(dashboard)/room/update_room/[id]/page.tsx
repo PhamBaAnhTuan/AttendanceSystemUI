@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Form, Input, message } from 'antd';
+import { Button, Form, Input } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
 import '../../room.css'
 import axios from 'axios';
@@ -9,6 +9,7 @@ import { API } from '@/constants/api';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
 import { getChangedFields, isFormChanged } from '@/utils/checkFormChange';
+import { useMessageContext } from '@/context/messageContext';
 // utils
 
 
@@ -17,7 +18,9 @@ const UpdateRoomPage = () => {
    const { token } = useAuth()
    const { id } = useParams();
    const [form] = Form.useForm();
+
    const [loading, setLoading] = useState(false);
+   const { showMessage } = useMessageContext()
    const [initialValues, setInitialValues]: any = useState({});
 
    const log = () => {
@@ -43,8 +46,6 @@ const UpdateRoomPage = () => {
             }
             form.setFieldsValue(values);
             setInitialValues(values)
-            // console.log('Initial form values: ', initialValues)
-            // console.log('Form values: ', form.getFieldsValue())
          } catch (error: any) {
             console.error('Failed to fetch room:', error?.response?.data || error?.message);
          } finally {
@@ -57,37 +58,35 @@ const UpdateRoomPage = () => {
 
 
    const onFinish = async (values: any) => {
-      // console.log('Initial form values: ', initialValues)
-      // console.log('Form values: ', form.getFieldsValue())
-      // const isChanged = isFormChanged(initialValues, values)
-      // console.log('is form changed: ', isChanged)
-      if (isFormChanged(initialValues, values)) {
-         const changedField = getChangedFields(initialValues, values)
-         // console.log('Some thing changed: ', changedField)
-         setLoading(true);
-         try {
-            const res = await axios.patch(`${API.ROOMS}${id}/`, changedField, {
+      const isFormChange = isFormChanged(initialValues, values);
+      if (!isFormChange) {
+         showMessage('info', 'Không có thay đổi nào!');
+         return;
+      }
+      try {
+         if (isFormChange) {
+            const changedField = getChangedFields(initialValues, values)
+            setLoading(true);
+            const res = await axios.put(`${API.ROOMS}${id}/`, changedField, {
                headers: {
                   'Authorization': `Bearer ${token}`,
                },
             });
             const data = res.data
             console.log('Post room res: ', data);
-            message.success('Cập nhật phòng học thành công!');
+            showMessage('success', 'Cập nhật phòng học thành công!');
             router.replace('/room');
-         } catch (error: any) {
-            const errorData = error.response?.data
-            if (errorData?.name?.[0] === 'room with this name already exists.') {
-               message.error('Tên phòng học đã tồn tại, vui lòng nhập tên khác!');
-            }
-            console.error('Lỗi chi tiết từ server:', error.response?.data);
-         } finally {
-            setLoading(false);
          }
-      } else {
-         message.info('Không có thay đổi nào!')
-         // console.warn('Nothing changed!')
+      } catch (error: any) {
+         const errorData = error.response?.data
+         if (errorData?.name?.[0] === 'room with this name already exists.') {
+            showMessage('error', 'Tên phòng học đã tồn tại, vui lòng nhập tên khác!');
+         }
+         console.error('Update Room error: ', error.response?.data);
+      } finally {
+         setLoading(false);
       }
+
    };
 
    return (

@@ -3,13 +3,14 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './student.css'
 import { useRouter } from 'next/navigation';
-import { Avatar, Button, List, message, Skeleton, Input } from 'antd';
-import { API, API_AUTH, API_BASE } from '@/constants/api'
+import { Avatar, Button, List, Skeleton, Input } from 'antd';
+import { API } from '@/constants/api'
 // hooks
 import { useAuth } from '@/hooks/useAuth';
 import { useAppDispatch } from '@/hooks/useDispatch';
+import { useMessageContext } from '@/context/messageContext';
 // types
-import { StudentType } from '@/store/studentSlice';
+import { EntityType } from '@/types/types';
 import { normalizeString } from '@/utils/normalizeString';
 
 
@@ -19,10 +20,11 @@ const StudentPage = () => {
    const { token, info } = useAuth()
 
    const [loading, setLoading] = useState(false);
+   const { showMessage } = useMessageContext()
 
    const [search, setSearch] = useState('');
-   const [students, setStudents] = useState<StudentType[]>([]);
-   const [filtered, setFiltered] = useState<StudentType[]>([]);
+   const [students, setStudents] = useState<EntityType[]>([]);
+   const [filtered, setFiltered] = useState<EntityType[]>([]);
 
    const log = () => {
       console.log(
@@ -44,12 +46,10 @@ const StudentPage = () => {
             }
          })
          const data = response.data
-         console.log('Response data: ', data);
+         console.log('Get student res: ', data);
          setStudents(data);
-         // messageApi.success('Lấy danh sách sinh viên thành công!');
       } catch (error: any) {
          console.error('Failed to fetch students:', error?.response?.data || error?.message);
-         // messageApi.error('Lấy danh sách sinh viên thất bại!');
       } finally {
          setLoading(false);
       }
@@ -69,12 +69,12 @@ const StudentPage = () => {
    const confirmDelete = async (id: number, name: string) => {
       if (confirm(`Bạn có chắc chắn muốn xóa sinh viên ${name} không?`)) {
          try {
-            const res = axios.delete(`${API.STUDENTS}${id}/`)
-            message.success(`Xóa sinh viên ${name} thành công!`);
+            await axios.delete(`${API.USERS}${id}/`)
+            showMessage('success', `Xóa sinh viên ${name} thành công!`);
             setStudents(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));
          } catch (error: any) {
-            message.error(`Xóa sinh viên ${name} thất bại!`);
+            showMessage('error', `Xóa sinh viên ${name} thất bại!`);
             console.log('Failed to delete student:', error?.response?.data || error?.message);
          }
       }
@@ -107,14 +107,23 @@ const StudentPage = () => {
                   <List.Item
                      actions={[
                         <Button
+                           key={'1'}
                            color="cyan" variant="filled"
                            href={`/student/update_student/${item.id}`}
                         >
                            <h5>Chỉnh sửa</h5>
                         </Button>,
                         <Button
+                           key={'2'}
+                           color="cyan" variant="filled"
+                           href={`/student/update_student_class/${item.id}`}
+                        >
+                           <h5>Thêm vào lớp</h5>
+                        </Button>,
+                        <Button
+                           key={'3'}
                            color="danger" variant="filled"
-                           onClick={() => confirmDelete(item.id, item.name)}
+                           onClick={() => confirmDelete(item.id, item.fullname)}
                         >
                            <h5>Xóa</h5>
                         </Button>

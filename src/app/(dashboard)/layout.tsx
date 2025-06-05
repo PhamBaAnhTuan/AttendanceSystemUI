@@ -1,6 +1,6 @@
 'use client';
-
-import { Menu, message, } from 'antd';
+import '@ant-design/v5-patch-for-react-19';
+import { Menu } from 'antd';
 import Link from 'next/link';
 import {
    BookOutlined,
@@ -23,16 +23,18 @@ import { useAppDispatch } from '@/hooks/useDispatch';
 import { signout } from '@/store/authSlice';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useMessageContext } from '@/context/messageContext'
 
 
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
    const pathname = usePathname();
+   const { showMessage } = useMessageContext()
    // Map các route cụ thể đến key tương ứng
    const getSelectedKey = (path: string): string => {
       if (path === '/') return 'schedule'; // trang gốc
-      // if (path.startsWith('/schedule')) return 'schedule';
-      if (path.startsWith('/attendance')) return 'attendance';
+      if (path.startsWith('/create_session')) return 'create_session';
+      if (path.startsWith('/attendance_list')) return 'attendance_list';
       if (path.startsWith('/schedule')) return path.includes('add') ? 'add_schedule' : 'schedule';
       if (path.startsWith('/teacher')) return path.includes('add') ? 'add_teacher' : 'teacher';
       if (path.startsWith('/student')) return path.includes('add') ? 'add_student' : 'student';
@@ -47,31 +49,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
    }, [pathname]);
 
    const dispatch = useAppDispatch()
-   const { scope } = useAuth()
-   let isAdmin
-   if (scope && scope === 'admin') {
-      isAdmin = true
-   }
+   const { scope, isAdmin } = useAuth()
+
    const confirmSignOut = async () => {
       if (confirm(`Bạn có chắc chắn muốn Đăng xuất không?`)) {
          try {
             dispatch(signout())
-            message.success(`Đăng xuất thành công!`);
+            showMessage('success', `Đăng xuất thành công!`);
          } catch (error: any) {
-            message.error(`Đăng xuất thất bại!`);
+            showMessage('error', `Đăng xuất thất bại!`);
             console.log('Failed to delete teacher:', error);
          }
       }
    };
+
    type MenuItem = GetProp<MenuProps, 'items'>[number];
    const items: MenuItem[] = [
       {
-         key: 'attendance',
+         key: 'attendance_management',
          icon: <TeamOutlined />,
-         label: <h4><Link href="/attendance">Điểm danh</Link></h4>,
+         label: <h4>Điểm danh</h4>,
+         children: [
+            {
+               key: 'create_session',
+               icon: <CiCircleList />,
+               label: <Link href="/attendance/create_session">Tạo buổi điểm danh</Link>,
+            },
+            {
+               key: 'attendance_list',
+               icon: <CiCircleList />,
+               label: <Link href="/attendance/attendance_list">Danh sách điểm danh</Link>,
+            }
+         ]
       },
       {
-         key: '2',
+         key: 'schedule_management',
          icon: <ScheduleOutlined />,
          label: <h4>Thời khóa biểu</h4>,
          children: [
@@ -88,7 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
          ]
       },
       {
-         key: '3',
+         key: 'teacher_management',
          icon: <UsergroupAddOutlined />,
          label: <h4>Quản lý giáo viên</h4>,
          children: [
@@ -101,12 +113,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                key: 'add_teacher',
                icon: <BsPersonPlus />,
                label: <Link href="/teacher/add_teacher">Thêm giáo viên</Link>,
-               disabled: !isAdmin
             }
          ]
       },
       {
-         key: '4',
+         key: 'student_management',
          icon: <UsergroupAddOutlined />,
          label: <h4>Quản lý sinh viên</h4>,
          children: [
@@ -119,12 +130,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                key: 'add_student',
                icon: <BsPersonPlus size={20} />,
                label: <Link href="/student/add_student">Thêm sinh viên</Link>,
-               disabled: !isAdmin
             }
          ]
       },
       {
-         key: '5',
+         key: 'subject_management',
          icon: <BookOutlined />,
          label: <h4>Quản lý môn học</h4>,
          children: [
@@ -137,12 +147,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                key: 'add_subject',
                icon: <FaBookMedical size={20} />,
                label: <Link href="/subject/add_subject">Thêm môn học</Link>,
-               disabled: !isAdmin
             }
          ]
       },
       {
-         key: '6',
+         key: 'class_management',
          icon: <SiGoogleclassroom />,
          label: <h4>Quản lý lớp học</h4>,
          children: [
@@ -155,12 +164,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                key: 'add_class',
                icon: <SiGoogleclassroom size={20} />,
                label: <Link href="/class/add_class">Thêm lớp học</Link>,
-               disabled: !isAdmin
             }
          ]
       },
       {
-         key: '7',
+         key: 'room_management',
          icon: <SiGoogleclassroom />,
          label: <h4>Quản lý phòng học</h4>,
          children: [
@@ -173,17 +181,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                key: 'add_room',
                icon: <SiGoogleclassroom size={20} />,
                label: <Link href="/room/add_room">Thêm phòng học</Link>,
-               disabled: !isAdmin
             }
          ]
       },
       {
-         key: '8',
+         key: 'signout',
          icon: <RxExit color='red' />,
          label: <h4 style={{ color: 'red' }} onClick={confirmSignOut}
          >Đăng xuất</h4>,
       },
    ];
+
+   function filterHidden(items: MenuItem[], hiddenKeys: string[]): MenuItem[] {
+      return items
+         .filter(item => !hiddenKeys.includes(item?.key))
+         .map(item => {
+            if (item.children && Array.isArray(item.children)) {
+               const filteredChildren = (item.children as MenuItem[]).filter(
+                  child => !hiddenKeys.includes(child.key)
+               );
+               return { ...item, children: filteredChildren };
+            }
+            return item;
+         });
+   }
+   const hiddenKeys = !isAdmin
+      ? ['teacher_management', 'teacher', 'add_teacher',
+         'student_management', 'student', 'add_student',
+         'class_management', 'class', 'add_class',
+         'subject_management', 'subject', 'add_subject',
+         'room_management', 'room', 'add_room',
+      ]
+      : [];
+
+   const filteredItems = filterHidden(items, hiddenKeys);
 
    return (
       <div className={styles.layout}>
@@ -197,7 +228,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 100px)' }}
                defaultSelectedKeys={[selectedKey]}
                mode="inline"
-               items={items}
+               items={filteredItems}
             />
          </aside>
          <main className={styles.content}>

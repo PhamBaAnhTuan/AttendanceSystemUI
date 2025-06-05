@@ -60,13 +60,13 @@ const AddRoomPage = () => {
             wrapperCol={{ span: 18 }}
             onFinish={handleSubmit}
          >
-            <Form.Item
+            {/* <Form.Item
                label="ID phòng học"
                name="id"
                rules={[{ required: true, message: 'Vui lòng nhập ID phòng học!' }]}
             >
                <Input />
-            </Form.Item>
+            </Form.Item> */}
 
             <Form.Item
                label="Tên phòng học"

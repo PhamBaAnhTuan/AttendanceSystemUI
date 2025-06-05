@@ -1,6 +1,5 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-// import './schedule.css'
 import axios from 'axios';
 import { API } from '@/constants/api';
 import { Table, Input, Button, Select, Checkbox, DatePicker } from 'antd';
@@ -8,9 +7,9 @@ import type { SelectProps, TableColumnsType } from 'antd';
 import type { SearchProps } from 'antd/es/input/Search';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
 import { useMessageContext } from '@/context/messageContext';
 import { useRootContext } from '@/context/rootContext';
+import { useScheduleQuery } from '@/hooks/useQuerySchedule';
 // utils
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -23,7 +22,7 @@ import { columns, TableDataType } from '@/types/types';
 const Schedule = () => {
    const { token, scope, isAdmin, info } = useAuth()
    const { showMessage } = useMessageContext()
-   const [loading, setLoading] = useState(false);
+   // const [loading, setLoading] = useState(false);
 
    // Helper chuyển shift từ tiếng Anh sang tiếng Việt
    const mapShiftToText = (shift: string): string => {
@@ -73,6 +72,7 @@ const Schedule = () => {
    const log = () => {
       console.log(
          '🔥 Is Admin: ', isAdmin,
+         '\n🔥 Token: ', token,
          '\n🔥 Scope: ', scope,
          '\n🔥 User info: ', info,
          '\n🔥 Schedule: ', schedule,
@@ -108,9 +108,9 @@ const Schedule = () => {
       } else {
          getTeacherSubjectList()
          getTeacherClassList()
-         setTeacherSelected(info.id)
+         setTeacherSelected(info?.id)
       }
-      handleQuery(true)
+      querySchedule(true)
    }, [])
 
    // 
@@ -142,7 +142,7 @@ const Schedule = () => {
    //
    const getTeacherSubjectList = async () => {
       try {
-         const res = await axios.get(`${API.TEACHER_SUBJECT}?teacher_id=${info.id}`, {
+         const res = await axios.get(`${API.TEACHER_SUBJECT}?teacher_id=${info?.id}`, {
             headers: {
                Authorization: `Bearer ${token}`
             }
@@ -157,7 +157,7 @@ const Schedule = () => {
    //
    const getTeacherClassList = async () => {
       try {
-         const res = await axios.get(`${API.TEACHER_CLASS}?teacher_id=${info.id}`, {
+         const res = await axios.get(`${API.TEACHER_CLASS_SUBJECT}?teacher_id=${info?.id}`, {
             headers: {
                Authorization: `Bearer ${token}`
             }
@@ -225,7 +225,7 @@ const Schedule = () => {
       }
    }
    // 
-   const subjectOptions: SelectProps['options'] = subjectList.length > 0 ? subjectList.map((subject: any) => ({
+   const subjectOptions: SelectProps['options'] = isAdmin ? subjectList.map((subject: any) => ({
       label: subject.name,
       value: subject.id
    }))
@@ -251,19 +251,24 @@ const Schedule = () => {
          console.error('Failed to fetch Class list:', error?.response?.data || error?.message);
       }
    };
+
    // 
-   const classOptions: SelectProps['options'] = classList.length > 0 ? classList.map((cls: any) => ({
+   const uniqueClassMap = new Map<string, any>();
+   teacherClassList.forEach((cls: any) => {
+      const className = cls?.classes?.name;
+      if (!uniqueClassMap.has(className)) {
+         uniqueClassMap.set(className, cls);
+         // console.log('Unique class added:', uniqueClassMap);
+      }
+   });
+   const classOptions: SelectProps['options'] = isAdmin ? classList.map((cls: any) => ({
       label: cls.name,
       value: cls.id
    }))
-      : teacherClassList.map((cls: any) => ({
+      : Array.from(uniqueClassMap.values()).map((cls: any) => ({
          label: cls?.classes.name,
          value: cls?.classes.id
       }))
-   // const classOptions: SelectProps['options'] = teacherClassList.map((cls: any) => ({
-   //    label: cls?.classes.name,
-   //    value: cls?.classes.id
-   // }))
    const handleClassSelected = (value: any) => {
       setClassSelected(value);
    };
@@ -292,45 +297,24 @@ const Schedule = () => {
    };
 
    // Hàm xử lý submit form
-   const handleQuery = async (isQueryAll: boolean) => {
-      setLoading(true);
-      let query = '';
-      if (isQueryAll) {
-         setDateSelected(undefined)
-         setShiftSelected(undefined)
-         if (isAdmin) {
-            setTeacherSelected(undefined)
-         } else if (teacherSelected) query += `${query ? '&' : '?'}teacher_id=${teacherSelected}`;
-         setRoomSelected(undefined)
-         setClassSelected(undefined)
-         setSubjectSelected(undefined)
-      } else {
-         if (dateSelected) query += `?date=${dateSelected}`;
-         if (shiftSelected) query += `${query ? '&' : '?'}period_id=${shiftSelected}`;
-         if (teacherSelected) query += `${query ? '&' : '?'}teacher_id=${teacherSelected}`;
-         if (roomSelected) query += `${query ? '&' : '?'}room_id=${roomSelected}`;
-         if (classSelected) query += `${query ? '&' : '?'}classes_id=${classSelected}`;
-         if (subjectSelected) query += `${query ? '&' : '?'}subject_id=${subjectSelected}`;
-      }
-      try {
-         // console.log('💥query: ', query)
-         const res = await axios.get(
-            `${API.SCHEDULE}${query}`,
-            {
-               headers: {
-                  'Authorization': `Bearer ${token}`,
-               },
-            });
-         const data = res.data
-         console.log('Get schedule res:', data);
-         setSchedule(data)
-      } catch (error: any) {
-         const errorData = error?.response?.data;
-         console.error('Lỗi chi tiết từ server:', errorData);
-      } finally {
-         setLoading(false);
-      }
-   };
+   const { loading, querySchedule } = useScheduleQuery({
+      token,
+      API,
+      scope,
+      teacherSelected,
+      classSelected,
+      dateSelected,
+      shiftSelected,
+      roomSelected,
+      subjectSelected,
+      setTeacherSelected,
+      setClassSelected,
+      setDateSelected,
+      setShiftSelected,
+      setRoomSelected,
+      setSubjectSelected,
+      setSchedule
+   });
 
    return (
       <div>
@@ -446,13 +430,13 @@ const Schedule = () => {
                color="primary"
                variant="solid"
                size='large'
-               onClick={() => handleQuery(false)}
+               onClick={() => querySchedule(false)}
             ><h5>Tìm</h5></Button>
             <Button
                color="primary"
                variant="solid"
                size='large'
-               onClick={() => handleQuery(true)}
+               onClick={() => querySchedule(true)}
             ><h5>Tìm tất cả</h5></Button>
          </div>
          <div >
@@ -466,12 +450,12 @@ const Schedule = () => {
                scroll={{ x: 'max-content', y: 'calc(100vh - 230px)' }}
             />
          </div>
-         <Button
+         {/* <Button
             color="primary"
             variant="solid"
             size='large'
             onClick={log}
-         ><h5>LOG</h5></Button>
+         ><h5>LOG</h5></Button> */}
       </div>
    )
 }

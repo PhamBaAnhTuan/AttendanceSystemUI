@@ -1,73 +1,84 @@
 import dayjs from "dayjs";
 import { formatDate } from "./formatTime";
+import { turnToArray } from "./turnToArray";
 
+// So sánh 2 mảng bất kể thứ tự
 const arraysEqual = (a: any[], b: any[]) => {
-	return a.length === b.length && a.every((item) => b.includes(item));
+	const aSorted = [...a].sort();
+	const bSorted = [...b].sort();
+	return a.length === b.length && aSorted.every((item, idx) => item === bSorted[idx]);
 };
 
-export const normalizeField = (val: any) => {
-	if (typeof val === "number" || typeof val === "string") {
-		return String(val);
-	}
+// Chuẩn hóa giá trị để so sánh
+export const normalizeField = (val: any): string => {
+	if (val === null || val === undefined) return "";
+
 	if (dayjs.isDayjs(val)) {
 		return val.format(formatDate);
 	}
-	if (typeof val === "object" && val !== null) {
-		return JSON.stringify(val);
+
+	if (typeof val === "string" || typeof val === "number" || typeof val === "boolean") {
+		return String(val).trim();
 	}
-	return val;
+
+	if (val instanceof Date) {
+		return dayjs(val).format(formatDate);
+	}
+
+	if (typeof val === "object") {
+		// Convert object có thể lặp lại thành chuỗi chuẩn hóa
+		try {
+			return JSON.stringify(val, Object.keys(val).sort());
+		} catch {
+			return "";
+		}
+	}
+
+	return "";
 };
+
+// So sánh avatar cũ và mới
 export const isAvatarChanged = (initialAvatar: any, currentAvatar: any): boolean => {
+	if (!initialAvatar && !currentAvatar) return false;
+	if (!initialAvatar || !currentAvatar) return true;
+
 	if (typeof initialAvatar === "string" && typeof currentAvatar === "string") {
 		return initialAvatar !== currentAvatar;
 	}
-	if (typeof initialAvatar === "string" && typeof currentAvatar === "object") {
-		return !initialAvatar.includes(currentAvatar.name);
+
+	if (typeof currentAvatar === "object" && currentAvatar?.name) {
+		if (typeof initialAvatar === "string") {
+			return !initialAvatar.includes(currentAvatar.name);
+		}
+		if (typeof initialAvatar === "object") {
+			return initialAvatar.name !== currentAvatar.name || initialAvatar.size !== currentAvatar.size;
+		}
 	}
-	if (
-		typeof initialAvatar === "object" &&
-		initialAvatar !== null &&
-		typeof currentAvatar === "object" &&
-		currentAvatar !== null
-	) {
-		return initialAvatar.name !== currentAvatar.name || initialAvatar.size !== currentAvatar.size;
-	}
-	return initialAvatar !== currentAvatar;
+
+	return true;
 };
 
+// So sánh toàn bộ form
 export const isFormChanged = (initialValues: any, currentValues: any): boolean => {
+	// console.log("Checking form change...");
 	return Object.keys(initialValues).some((key) => {
 		if (key === "avatar") {
 			return isAvatarChanged(initialValues.avatar, currentValues.avatar);
 		}
-		return normalizeField(initialValues[key]) !== normalizeField(currentValues[key]);
+
+		const initial = normalizeField(initialValues[key]);
+		const current = normalizeField(currentValues[key]);
+		return initial !== current;
 	});
-};
-
-export const checkIfChangesExist = (
-	initialValues: any,
-	currentValues: any,
-	currentSubjectRelations: any[],
-	selectedSubjectIds: number[],
-	currentClassRelations: any[],
-	selectedClassIds: number[],
-) => {
-	const isForm = isFormChanged(initialValues, currentValues);
-
-	const currentSubjectIds = currentSubjectRelations.map((rel) => rel.id);
-	const currentClassIds = currentClassRelations.map((rel) => rel.id);
-
-	return {
-		isFormChanged: isForm,
-		isSubjectChanged: !arraysEqual(currentSubjectIds, selectedSubjectIds),
-		isClassChanged: !arraysEqual(currentClassIds, selectedClassIds),
-	};
 };
 
 export const getChangedFields = (initial: any, current: any): Record<string, any> => {
 	const changedFields: Record<string, any> = {};
 
+	// Chỉ so sánh những field có trong form submit
 	Object.keys(current).forEach((key) => {
+		if (!(key in initial)) return; // ⚠️ Bỏ qua field không có trong initialValues
+
 		if (key === "avatar") {
 			if (isAvatarChanged(initial.avatar, current.avatar)) {
 				changedFields.avatar = current.avatar;
@@ -75,11 +86,27 @@ export const getChangedFields = (initial: any, current: any): Record<string, any
 		} else {
 			const a = normalizeField(initial[key]);
 			const b = normalizeField(current[key]);
+
 			if (a !== b) {
-				changedFields[key] = current[key]; // giữ raw value để nộp lên
+				changedFields[key] = current[key];
 			}
 		}
 	});
 
 	return changedFields;
+};
+
+export const checkSubjectRelationChange = (initialSubjectIDs: string[], selectedSubjectIDs: string[]) => {
+	return !arraysEqual(initialSubjectIDs, selectedSubjectIDs);
+};
+export const checkClassRelationChange = (initialClassIDs: string[], selectedClassIDs: string[]) => {
+	return !arraysEqual(initialClassIDs, selectedClassIDs);
+};
+
+export const checkRelationChange = (initialIDs: string[], currentIDs: string[]) => {
+	const initialID = turnToArray(initialIDs);
+	const currentID = turnToArray(currentIDs);
+	// console.log("Initial IDs:", initialID);
+	// console.log("Current IDs:", currentID);
+	return !arraysEqual(initialID, currentID);
 };

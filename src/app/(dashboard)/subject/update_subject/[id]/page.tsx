@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Form, Input, message } from 'antd';
+import { Button, Form, Input } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
 import '../../subject.css'
 import axios from 'axios';
 import { API } from '@/constants/api';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
+import { useMessageContext } from '@/context/messageContext';
 // utils
 import { isFormChanged, getChangedFields } from '@/utils/checkFormChange';
 
@@ -18,6 +19,7 @@ const UpdateSubjectPage = () => {
    const [form] = Form.useForm();
    const [loading, setLoading] = useState(false);
    const [initialValues, setInitialValues]: any = useState({});
+   const { showMessage } = useMessageContext()
 
    const log = () => {
       console.log(
@@ -57,36 +59,38 @@ const UpdateSubjectPage = () => {
 
 
    const onFinish = async (values: any) => {
-      // console.log('Initial form values: ', initialValues)
-      // console.log('Form values: ', form.getFieldsValue())
-      // const isChanged = isFormChanged(initialValues, values)
-      // console.log('is form changed: ', isChanged)
-      if (isFormChanged(initialValues, values)) {
-         const changedField = getChangedFields(initialValues, values)
-         // console.log('Some thing changed: ', changedField)
-         setLoading(true);
-         try {
-            const res = await axios.patch(`${API.SUBJECTS}${id}/`, changedField, {
-               headers: {
-                  'Authorization': `Bearer ${token}`,
-               },
+      const isFormChange = isFormChanged(initialValues, values);
+      if (!isFormChange) {
+         showMessage('info', 'Không có thay đổi nào!');
+         return;
+      }
+      try {
+         if (isFormChange) {
+            setLoading(true)
+            const changedFields = getChangedFields(initialValues, values);
+            const formData = new FormData();
+
+            Object.entries(changedFields).forEach(([key, value]) => {
+               formData.append(key, value);
             });
-            const data = res.data
-            console.log('Post subject res: ', data);
-            message.success('Cập nhật môn học thành công!');
-            router.replace('/subject');
-         } catch (error: any) {
-            const errorData = error.response?.data
-            if (errorData?.name?.[0] === 'subject with this name already exists.') {
-               message.error('Tên môn học đã tồn tại, vui lòng nhập tên khác!');
+
+            for (const [key, value] of formData.entries()) {
+               console.log(`💥PUT ${key}:`, value);
             }
-            console.error('Lỗi chi tiết từ server:', error.response?.data);
-         } finally {
-            setLoading(false);
+            await axios.put(`${API.SUBJECTS}${id}/`, formData,
+               {
+                  headers:
+                     { Authorization: `Bearer ${token}` }
+               }
+            );
+            showMessage('success', 'Cập nhật thông tin môn học thành công!');
+            router.replace('/subject');
          }
-      } else {
-         message.info('Không có thay đổi nào!')
-         // console.warn('Nothing changed!')
+      } catch (error) {
+         console.error('Update Subject error:', error);
+         showMessage('error', 'Cập nhật thất bại');
+      } finally {
+         setLoading(false);
       }
    };
 

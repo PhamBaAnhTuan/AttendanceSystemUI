@@ -1,29 +1,32 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-// import '../teacher.css';
-import { API } from '@/constants/api';
+
+import { API, API_BASE } from '@/constants/api';
 import { Button } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { useAppDispatch } from '@/hooks/useDispatch';
-import { postImgAction } from '@/services/mainService';
+import { useMessageContext } from '@/context/messageContext';
 import axios from 'axios';
 
-const directions = ['Nhìn thẳng vào màn hình', 'Quay sang TRÁI', 'Quay sang PHẢI'];
+const directions = ['Nhìn thẳng vào màn hình 1', 'Nhìn thẳng vào màn hình 2', 'Nhìn thẳng vào màn hình 3', 'Quay sang TRÁI', 'Quay sang PHẢI'];
 
 function StreamCamera() {
    const { token } = useAuth();
    const router = useRouter();
 
    const searchParams = useSearchParams();
-   const teacherID = searchParams.get('id');
-   const teacherName = searchParams.get('fullname')?.replace(/\s+/g, '');
+   const ID = searchParams.get('id');
+   const role = searchParams.get('role')
+   const fullName = searchParams.get('fullname')?.replace(/\s+/g, '');
+   const API_URL = role === 'teacher' ? API.TEACHERS : API.STUDENTS;
 
    const videoRef = useRef<HTMLVideoElement>(null);
    const [images, setImages] = useState<string[]>([]);
    const [instruction, setInstruction] = useState('');
    const [countdown, setCountdown] = useState(0);
    const [isCapturing, setIsCapturing] = useState(false);
+
+   const { showMessage } = useMessageContext();
 
    // Mở camera
    useEffect(() => {
@@ -52,7 +55,9 @@ function StreamCamera() {
    // Chuyển từ tiếng Việt sang dạng chuẩn
    const normalizeDirection = (direction: string): string => {
       switch (direction.trim()) {
-         case 'Nhìn thẳng vào màn hình': return 'front';
+         case 'Nhìn thẳng vào màn hình 1': return 'front1';
+         case 'Nhìn thẳng vào màn hình 2': return 'front2';
+         case 'Nhìn thẳng vào màn hình 3': return 'front3';
          case 'Quay sang TRÁI': return 'left';
          case 'Quay sang PHẢI': return 'right';
          default: return direction.toLowerCase();
@@ -65,11 +70,10 @@ function StreamCamera() {
       return await res.blob();
    };
 
-   // Chụp ảnh và gửi về server
-   const captureAndSend = async (direction: string) => {
+   const captureImage = async (direction: string): Promise<{ blob: Blob; fileName: string }> => {
       const canvas = document.createElement('canvas');
       const video = videoRef.current;
-      if (!video) return;
+      if (!video) throw new Error('Video element not found');
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -80,17 +84,9 @@ function StreamCamera() {
       const blob = await base64ToBlob(dataURL);
 
       const normalized = normalizeDirection(direction);
-      const fileName = `Teacher_${teacherName}_${normalized}.png`;
+      const fileName = `student_${ID}_${fullName}_${normalized}.png`;
 
-      const imgForm = new FormData();
-      imgForm.append('image', blob, fileName);
-
-      await axios.post(`${API.TEACHERS}upload-image/`, imgForm, {
-         headers: {
-            'Authorization': `Bearer ${token}`
-         }
-      })
-      setImages((prev) => [...prev, dataURL]);
+      return { blob, fileName };
    };
 
    // Đếm ngược
@@ -109,23 +105,62 @@ function StreamCamera() {
       });
    };
 
-   // Tiến trình chụp toàn bộ
+   const sendAllImages = async (images: { blob: Blob; fileName: string }[]) => {
+      const formData = new FormData();
+
+      images.forEach((image, index) => {
+         formData.append(`image${index + 1}`, image.blob, image.fileName);
+      });
+      for (const [key, value] of formData.entries()) {
+         console.log(`🔥${key}:`, value);
+      }
+
+      try {
+         const res = await axios.post(`${API.FACE_TRAINING}train/`, formData, {
+            headers: {
+               'Authorization': `Bearer ${token}`
+            }
+         });
+         const data = res.data
+         if (data) {
+            showMessage('success', 'Tất cả ảnh đã được tải lên thành công!');
+            console.log('All images uploaded successfully: ', data);
+         }
+      } catch (error) {
+         console.error('Error uploading images:', error);
+         throw error;
+      }
+   };
+
    const startFullCaptureSequence = async () => {
       setIsCapturing(true);
-      for (let i = 0; i < directions.length; i++) {
-         const dir = directions[i];
-         setInstruction(dir);
-         await new Promise(res => setTimeout(res, 500)); // Cho UI kịp cập nhật
-         await runCountdown(3);
-         await captureAndSend(dir);
+      const capturedImages: { blob: Blob; fileName: string }[] = [];
+
+      try {
+         for (let i = 0; i < directions.length; i++) {
+            const dir = directions[i];
+            setInstruction(dir);
+            await new Promise(res => setTimeout(res, 500));
+            await runCountdown(1);
+
+            const image = await captureImage(dir);
+            capturedImages.push(image);
+            setImages(prev => [...prev, URL.createObjectURL(image.blob)]);
+         }
+
+         await sendAllImages(capturedImages);
+         setInstruction('Đã hoàn tất chụp hình 🎉');
+      } catch (error) {
+         console.error('Error during capture sequence:', error);
+         setInstruction('Có lỗi xảy ra, vui lòng thử lại');
+      } finally {
+         setIsCapturing(false);
       }
-      setInstruction('Đã hoàn tất chụp hình 🎉');
-      setIsCapturing(false);
    };
 
    return (
       <div className='camera-container'>
-         <h1 className='heading'>Hướng dẫn chụp ảnh giáo viên</h1>
+         <h1 className='heading'>Hướng dẫn chụp ảnh sinh viên</h1>
          <video ref={videoRef} autoPlay playsInline className='video' />
 
          {instruction && (
@@ -138,7 +173,8 @@ function StreamCamera() {
             <Button type="primary" onClick={startFullCaptureSequence} disabled={isCapturing}>
                <h4>{isCapturing ? 'Đang chụp...' : 'Bắt đầu chụp'}</h4>
             </Button>
-            <Button danger onClick={() => router.replace('/teacher')} disabled={isCapturing}>
+            <Button danger onClick={() => router.replace(`/${role}`)} disabled={isCapturing}>
+               {/* <Button danger onClick={startFullCaptureSequence} disabled={isCapturing}> */}
                <h4>Xong</h4>
             </Button>
          </div>

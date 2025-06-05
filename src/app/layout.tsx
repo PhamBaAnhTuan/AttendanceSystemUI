@@ -8,6 +8,7 @@ import { MessageProvider } from '@/context/messageContext';
 // components
 import { Providers } from '@/components/Providers';
 import AuthGate from '../components/AuthGate';
+import '@ant-design/v5-patch-for-react-19';
 
 export default function RootLayout({
   children,

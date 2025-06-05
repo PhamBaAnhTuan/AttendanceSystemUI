@@ -1,21 +1,30 @@
+import { Dayjs } from "dayjs";
 import { TableColumnsType } from "antd";
 
-export interface UserInfoType {
-	gender?: string;
-	id?: number | string | any;
-	name?: string;
-	email?: string;
-	classId?: string;
-	address?: string;
-	phoneNumber?: number | string;
-	avatar?: string | any;
+export interface EntityType {
+	id: string | any;
+	name: string;
+	subscription: string | null;
 }
 
-export interface ClassType {
-	id?: number | string | any;
-	name?: string;
-	description?: string | any;
+enum RoleName {
+	Admin = "admin",
+	Teacher = "teacher",
+	Student = "student",
 }
+
+export type UserInfoType = {
+	id: string;
+	fullname: string;
+	email: string;
+	phone_number: string | null;
+	address: string | null;
+	date_of_birth: Dayjs | null;
+	avatar: string | null;
+	role: {
+		name: RoleName;
+	};
+};
 
 export interface TableDataType {
 	key: React.Key;
@@ -26,7 +35,6 @@ export interface TableDataType {
 	class: string | number;
 	subject: string;
 }
-
 export const columns: TableColumnsType<TableDataType> = [
 	{
 		title: "Ngày",
@@ -43,6 +51,42 @@ export const columns: TableColumnsType<TableDataType> = [
 	{
 		title: "Phòng",
 		dataIndex: "room",
+	},
+	{
+		title: "Lớp",
+		dataIndex: "class",
+	},
+	{
+		title: "Môn",
+		dataIndex: "subject",
+	},
+];
+
+export interface SessionTableDataType {
+	key: React.Key;
+	date: string | null;
+	start_time: string | null;
+	end_time: string | null;
+	teacher: string | null;
+	subject: string;
+	class: string | number;
+}
+export const sessionColumns: TableColumnsType<SessionTableDataType> = [
+	{
+		title: "Ngày",
+		dataIndex: "date",
+	},
+	{
+		title: "Thời gian bắt đầu",
+		dataIndex: "start_time",
+	},
+	{
+		title: "Thời gian kết thúc",
+		dataIndex: "end_time",
+	},
+	{
+		title: "Giáo viên",
+		dataIndex: "teacher",
 	},
 	{
 		title: "Lớp",

@@ -9,42 +9,44 @@ import { API } from '@/constants/api'
 import { useAuth } from '@/hooks/useAuth';
 import { useMessageContext } from '@/context/messageContext'
 // types
-import { ClassType } from '@/store/classSlice';
 import { normalizeString } from '@/utils/normalizeString';
+import { EntityType } from '@/types/types';
 
 const ClassPage = () => {
-   const router = useRouter();
-   const { token } = useAuth()
+   const { token, isAdmin, info } = useAuth()
+   const API_URL = isAdmin ? API.CLASSES : API.TEACHER_CLASS;
 
    const [loading, setLoading] = useState(false);
    const { showMessage } = useMessageContext()
 
    const [search, setSearch] = useState('');
-   const [classes, setClasses] = useState<ClassType[]>([]);
-   const [filtered, setFiltered] = useState<ClassType[]>([]);
+   const [classes, setClasses] = useState<EntityType[]>([]);
+   const [filtered, setFiltered] = useState<EntityType[]>([]);
 
    const log = () => {
       console.log(
-         // '\nUser: ', user,
+         '\nRole: ', info?.role.name,
          '\nToken: ', token,
+         '\nClasses: ', classes,
+         '\nFiltered: ', filtered,
       );
    }
 
    useEffect(() => {
-      getClassList(token)
+      getClassList()
    }, []);
 
-   const getClassList = async (token: string | any) => {
+   const getClassList = async () => {
       setLoading(true);
       try {
-         const res = await axios.get(API.CLASSES, {
+         const res = await axios.get(API_URL, {
             headers: {
                'Authorization': `Bearer ${token}`
             }
          })
          const data = res.data
-         console.log('Get class res: ', data);
-         setClasses(data);
+         const classesData = isAdmin ? data : data.map((cls: any) => cls.classes);
+         setClasses(classesData);
       } catch (error: any) {
          console.error('Failed to fetch class:', error?.response?.data || error?.message);
       } finally {
@@ -52,11 +54,10 @@ const ClassPage = () => {
       }
    };
 
-   // Filter list when search input changes
    useEffect(() => {
       const normalizedSearch = normalizeString(search);
 
-      const filteredData = classes.filter((cls: any) =>
+      const filteredData = classes.filter(cls =>
          normalizeString(cls.name || '').includes(normalizedSearch)
       );
 
@@ -66,7 +67,9 @@ const ClassPage = () => {
    const confirmDelete = async (id: number, name: string) => {
       if (confirm(`Bạn có chắc chắn muốn xóa lớp ${name} không?`)) {
          try {
-            const res = await axios.delete(`${API.CLASSES}${id}/`)
+            const res = await axios.delete(`${API.CLASSES}${id}/`,
+               { headers: { Authorization: `Bearer ${token}` } }
+            )
             showMessage('success', `Xóa lớp ${name} thành công!`);
             setClasses(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));
@@ -94,21 +97,22 @@ const ClassPage = () => {
          </div>
 
 
-         <div style={{ height: '75vh', width: '72vw', overflow: 'auto', margin: '0 auto' }}>
+         <div style={{ height: '75vh', overflow: 'auto', margin: '0 auto' }}>
             <List
+               size='small'
                loading={loading}
                itemLayout="horizontal"
                dataSource={filtered}
                renderItem={(item: any) => (
                   <List.Item
                      actions={[
-                        <Button
+                        isAdmin && <Button
                            color="cyan" variant="filled"
                            href={`/class/update_class/${item.id}`}
                         >
                            <h5>Chỉnh sửa</h5>
                         </Button>,
-                        <Button
+                        isAdmin && <Button
                            color="danger" variant="filled"
                            onClick={() => confirmDelete(item.id, item.name)}
                         >
