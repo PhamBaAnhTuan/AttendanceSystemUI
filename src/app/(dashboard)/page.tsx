@@ -1,15 +1,13 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import axios from 'axios';
 import { API } from '@/constants/api';
-import { Table, Input, Button, Select, Checkbox, DatePicker } from 'antd';
-import type { SelectProps, TableColumnsType } from 'antd';
-import type { SearchProps } from 'antd/es/input/Search';
+import { Table, Button, Select, DatePicker } from 'antd';
+import type { SelectProps } from 'antd';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
-import { useMessageContext } from '@/context/messageContext';
-import { useRootContext } from '@/context/rootContext';
 import { useScheduleQuery } from '@/hooks/useQuerySchedule';
+import { useAppDispatch } from '@/hooks/useDispatch';
+import { getUserInfo } from '@/store/authSlice';
 // utils
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -19,13 +17,14 @@ import { mapShiftToText, normalizeString } from '@/utils/normalizeString';
 // types
 import { columns, TableDataType } from '@/types/types';
 // services
-import { getTeacherClassRelation, getTeacherList, getTeacherSubjectRelation } from '@/services/teacherServices';
+import { fetchUserInfo, getTeacherClassRelation, getTeacherList, getTeacherSubjectRelation } from '@/services/teacherServices';
 import { getClassList } from '@/services/classServices';
 import { getSubjectList } from '@/services/subjectServices';
 import { getShiftList } from '@/services/shiftServices';
 import { getRoomList } from '@/services/roomServices';
 
 const Schedule = () => {
+   const dispatch = useAppDispatch()
    const { token, scope, isAdmin, info } = useAuth()
    // date
    const [dateSelected, setDateSelected]: any = useState();
@@ -60,6 +59,7 @@ const Schedule = () => {
    })))
 
    useEffect(() => {
+      fetchUserInfo(token, dispatch, getUserInfo)
       getShiftList(token, setShiftList)
       getRoomList(token, setRoomList)
       if (isAdmin) {
