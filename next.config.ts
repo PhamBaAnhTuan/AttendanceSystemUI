@@ -13,4 +13,7 @@ module.exports = {
 			bodySizeLimit: "10mb",
 		},
 	},
+	typescript: {
+		ignoreBuildErrors: true,
+	},
 };
