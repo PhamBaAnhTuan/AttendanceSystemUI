@@ -23,14 +23,7 @@ function AttendanceDetailPage() {
    const [attendanceDetail, setAttendanceDetail] = useState<AttendanceDetailType | null>(null)
    const [className, setClassName] = useState('')
    const [studentList, setStudentList] = useState([])
-   const log = () => {
-      console.log(
-         'id: ', ID,
-         'attend detail: ', attendanceDetail,
-         'student list: ', studentList,
-         'className: ', className,
-      )
-   }
+
    useEffect(() => {
       getAttendanceDetail(ID)
    }, [ID])
@@ -72,9 +65,9 @@ function AttendanceDetailPage() {
       }
    }
 
-   const originalData: SessionDetailTableDataType[] = studentList.map((item: any) => {
+   const originalData: SessionDetailTableDataType[] = studentList?.map((item: any) => {
       const markedStudents = attendanceDetail?.attendances || [];
-      const markedStudentIds = markedStudents.map((att: any) => att.student_details.id);
+      const markedStudentIds = markedStudents?.map((att: any) => att.student_details.id);
       const isPresent = markedStudentIds.includes(item?.student?.id);
       return {
          key: item?.id,
@@ -138,7 +131,7 @@ function AttendanceDetailPage() {
    ];
 
    const exportToExcel = (data: any[]) => {
-      const formattedData = data.map((item) => ({
+      const formattedData = data?.map((item) => ({
          'Ngày điểm danh': item.date,
          'Họ và tên sinh viên': item.student,
          'Thời gian bắt đầu': item.isActive ? item.start_time : '--',
@@ -174,7 +167,6 @@ function AttendanceDetailPage() {
          </div>
 
          <Button color='primary' variant='outlined' onClick={() => exportToExcel(originalData)}>Xuất file Excel</Button>
-         {/* <Button onClick={log}>log</Button> */}
       </div>
    )
 }

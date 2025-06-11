@@ -75,12 +75,12 @@ const AddSchedulePage = () => {
          const matchSubject = teacherClassRelation.filter((obj: any) => {
             return obj.subject?.id === subjectSelected
          })
-         const classFiltered = matchSubject.map((cls: any) => cls?.classes);
+         const classFiltered = matchSubject?.map((cls: any) => cls?.classes);
          setClassList(classFiltered);
       }
    }, [subjectSelected])
    // 
-   const teacherOptions: SelectProps['options'] = teacherList.map((teacher: any) => ({
+   const teacherOptions: SelectProps['options'] = teacherList?.map((teacher: any) => ({
       label: teacher.fullname,
       value: teacher.id
    }));
@@ -88,16 +88,16 @@ const AddSchedulePage = () => {
       setTeacherSelected(value);
    };
    // 
-   const morningShiftOptions: SelectProps['options'] = shiftList.filter((shift: any) => shift.shift === "morning").map((shift: any) => ({
+   const morningShiftOptions: SelectProps['options'] = shiftList?.filter((shift: any) => shift.shift === "morning")?.map((shift: any) => ({
       label: shift.name,
       value: shift.id,
 
    }))
-   const afternoonShiftOptions: SelectProps['options'] = shiftList.filter((shift: any) => shift.shift === "afternoon").map((shift: any) => ({
+   const afternoonShiftOptions: SelectProps['options'] = shiftList?.filter((shift: any) => shift.shift === "afternoon")?.map((shift: any) => ({
       label: shift.name,
       value: shift.id
    }))
-   const eveningShiftOptions: SelectProps['options'] = shiftList.filter((shift: any) => shift.shift === "evening").map((shift: any) => ({
+   const eveningShiftOptions: SelectProps['options'] = shiftList?.filter((shift: any) => shift.shift === "evening")?.map((shift: any) => ({
       label: shift.name,
       value: shift.id
    }))
@@ -105,7 +105,7 @@ const AddSchedulePage = () => {
       setShiftSelected(value);
    };
    //
-   const subjectOptions: SelectProps['options'] = Array.from(teacherSubjectRelation.values()).map((subject: any) => ({
+   const subjectOptions: SelectProps['options'] = Array.from(teacherSubjectRelation.values())?.map((subject: any) => ({
       label: subject?.name,
       value: subject?.id
    }));
@@ -113,7 +113,7 @@ const AddSchedulePage = () => {
       setSubjectSelected(value);
    };
    // 
-   const classOptions: SelectProps['options'] = Array.from(classList.values()).map((cls: any) => ({
+   const classOptions: SelectProps['options'] = Array.from(classList.values())?.map((cls: any) => ({
       label: cls?.name,
       value: cls?.id
    }));
@@ -121,7 +121,7 @@ const AddSchedulePage = () => {
       setClassSelected(value);
    };
    // 
-   const roomOptions: SelectProps['options'] = roomList.map((room: any) => ({
+   const roomOptions: SelectProps['options'] = roomList?.map((room: any) => ({
       label: room.name,
       value: room.id
    }));

@@ -36,7 +36,7 @@ const AddSubjectPage = () => {
       form.resetFields(['major_id']);
    }, [facultySelected])
    // 
-   const facultyOptions: SelectProps['options'] = facultyList.map((faculty: any) => ({
+   const facultyOptions: SelectProps['options'] = facultyList?.map((faculty: any) => ({
       label: faculty.name,
       value: faculty.id
    }));
@@ -44,7 +44,7 @@ const AddSubjectPage = () => {
       setFacultySelected(value);
    };
    // 
-   const majorOptions: SelectProps['options'] = majorList.map((major: any) => ({
+   const majorOptions: SelectProps['options'] = majorList?.map((major: any) => ({
       label: major.name,
       value: major.id
    }));

@@ -56,7 +56,7 @@ const AttendanceListPage = () => {
       }
    }, [])
    // 
-   const attendanceData: SessionTableDataType[] = attendanceList.map((attend: any) => {
+   const attendanceData: SessionTableDataType[] = attendanceList?.map((attend: any) => {
       const teacherName = teacherList.find((teacher: UserInfoType) => teacher.id === attend?.created_by)?.fullname;
       return {
          key: attend?.id,
@@ -133,11 +133,11 @@ const AttendanceListPage = () => {
    ];
    // 
    const subjectOptions: SelectProps['options'] = isAdmin
-      ? Array.from(subjectList.values()).map((subject: any) => ({
+      ? Array.from(subjectList.values())?.map((subject: any) => ({
          label: subject?.name,
          value: subject?.id
       }))
-      : Array.from(teacherSubjectRelation.values()).map((subject: any) => ({
+      : Array.from(teacherSubjectRelation.values())?.map((subject: any) => ({
          label: subject?.name,
          value: subject?.id
       }));
@@ -153,11 +153,11 @@ const AttendanceListPage = () => {
       }
    });
    const classOptions: SelectProps['options'] = isAdmin
-      ? Array.from(classList.values()).map((cls: any) => ({
+      ? Array.from(classList.values())?.map((cls: any) => ({
          label: cls?.name,
          value: cls?.id
       }))
-      : Array.from(uniqueClassMap.values()).map((cls: any) => ({
+      : Array.from(uniqueClassMap.values())?.map((cls: any) => ({
          label: cls?.classes?.name,
          value: cls?.classes?.id
       }))

@@ -1,6 +1,7 @@
 // export const API_URL = "https://660d2bd96ddfa2943b33731c.mockapi.io/api/users/";
 
 export const API_BASE = "http://127.0.0.1:8000";
+// export const API_BASE = "https://4aa5-14-191-112-99.ngrok-free.app";
 export const API_URL = "http://127.0.0.1:8000/api";
 export const CLOUD_URL = "https://api.cloudinary.com/v1_1/dx69v1c83/image/upload";
 

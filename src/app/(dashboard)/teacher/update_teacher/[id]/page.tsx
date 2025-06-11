@@ -49,7 +49,7 @@ const UpdateTeacherPage = () => {
       }
    }, [id, form]);
    useEffect(() => {
-      const subjectObjID = teacherSubjectRelation.map((item: any) => item?.id);
+      const subjectObjID = teacherSubjectRelation?.map((item: any) => item?.id);
       setInitialTeacherSubject(subjectObjID);
       setSubjectSelected(subjectObjID)
    }, [teacherSubjectRelation])
@@ -107,7 +107,7 @@ const UpdateTeacherPage = () => {
          }
       }
       if (subjectsToAdd.length > 0) {
-         const subjectsPayload = subjectsToAdd.map(subjectID => ({
+         const subjectsPayload = subjectsToAdd?.map(subjectID => ({
             teacher_id: teacherID,
             subject_id: subjectID
          }));
@@ -125,7 +125,7 @@ const UpdateTeacherPage = () => {
    };
 
    // 
-   const subjectOptions: SelectProps['options'] = subjectList.map((subject: any) => ({
+   const subjectOptions: SelectProps['options'] = subjectList?.map((subject: any) => ({
       label: subject?.name,
       value: subject?.id
    }));

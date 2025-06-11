@@ -50,8 +50,8 @@ export const getStudentClassRelationByStudentID = async (
 				Authorization: `Bearer ${token}`,
 			},
 		});
-		const data = res.data;
-		const classes = data.map((cls: any) => cls.classes.id);
+		const data = res?.data;
+		const classes = data?.map((cls: any) => cls?.classes?.id);
 		setInitialStudentClass(classes);
 		setClassSelected(classes);
 	} catch (error: any) {

@@ -88,7 +88,7 @@ const UpdateTeacherClassSubjectPage = () => {
       }
       if (classesToAdd.length > 0) {
          // console.log('ID classes to add: ', classesToAdd)
-         const classPayload = classesToAdd.map(classID => ({
+         const classPayload = classesToAdd?.map(classID => ({
             student_id: studentID,
             class_id: classID,
          }));
@@ -106,7 +106,7 @@ const UpdateTeacherClassSubjectPage = () => {
       }
    };
    // 
-   const classOptions: SelectProps['options'] = classList.map((cls: any) => ({
+   const classOptions: SelectProps['options'] = classList?.map((cls: any) => ({
       label: cls.name,
       value: cls.id
    }));

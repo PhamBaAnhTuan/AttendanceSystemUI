@@ -87,7 +87,7 @@ const UpdateStudentPage = () => {
       return file
    };
    // 
-   const classOptions: SelectProps['options'] = classList.map((cls: any) => ({
+   const classOptions: SelectProps['options'] = classList?.map((cls: any) => ({
       label: cls.name,
       value: cls.id
    }));
@@ -119,7 +119,7 @@ const UpdateStudentPage = () => {
          }
       }
       if (classesToAdd.length > 0) {
-         const classPayload = classesToAdd.map(classID => ({
+         const classPayload = classesToAdd?.map(classID => ({
             student_id: studentID,
             class_id: classID
          }));

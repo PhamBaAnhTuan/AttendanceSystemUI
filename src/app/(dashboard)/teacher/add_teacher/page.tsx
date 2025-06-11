@@ -38,7 +38,7 @@ const AddTeacherPage = () => {
       getSubjectList(token, setSubjectList)
    }, [])
    // 
-   const subjectOptions: SelectProps['options'] = subjectList.map((subject: any) => ({
+   const subjectOptions: SelectProps['options'] = subjectList?.map((subject: any) => ({
       label: subject.name,
       value: subject.id
    }));

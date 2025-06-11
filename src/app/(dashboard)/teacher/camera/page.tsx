@@ -185,7 +185,7 @@ function StreamCamera() {
             <div className='imageList'>
                <h4 style={{ marginTop: '10px' }} >Ảnh đã chụp:</h4>
                <div className='imageGrid'>
-                  {images.map((img, idx) => (
+                  {images?.map((img, idx) => (
                      <img key={idx} src={img} className='imageItem' alt={`capture-${idx}`} />
                   ))}
                </div>

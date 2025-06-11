@@ -25,7 +25,7 @@ const AddMajorPage = () => {
       getFacultyList(token, setFacultyList)
    })
    // 
-   const facultyOptions: SelectProps['options'] = facultyList.map((faculty: any) => ({
+   const facultyOptions: SelectProps['options'] = facultyList?.map((faculty: any) => ({
       label: faculty.name,
       value: faculty.id
    }));

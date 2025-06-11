@@ -44,7 +44,7 @@ const ClassPage = () => {
    }, []);
    useEffect(() => {
       if (teacherClassRelation) {
-         const classes = teacherClassRelation.map((item: any) => item?.classes)
+         const classes = teacherClassRelation?.map((item: any) => item?.classes)
          setClassList(classes)
       }
    }, [teacherClassRelation])

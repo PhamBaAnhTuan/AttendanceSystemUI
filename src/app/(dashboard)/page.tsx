@@ -48,7 +48,7 @@ const Schedule = () => {
    // schedule
    const [scheduleList, setScheduleList] = useState<TableDataType[]>([]);
 
-   const scheduleData: TableDataType[] = scheduleList.map(((sche: any) => ({
+   const scheduleData: TableDataType[] = scheduleList?.map(((sche: any) => ({
       key: sche?.id,
       date: sche?.date,
       shift: `${sche?.period.name} ${mapShiftToText(sche?.period.shift)}`,
@@ -87,7 +87,7 @@ const Schedule = () => {
       } else setDateSelected(undefined)
    };
    // teacher options
-   const teacherOptions: SelectProps['options'] = teacherList.map((teacher: any) => ({
+   const teacherOptions: SelectProps['options'] = teacherList && teacherList?.map((teacher: any) => ({
       label: teacher?.fullname,
       value: teacher?.id
    }));
@@ -95,16 +95,16 @@ const Schedule = () => {
       setTeacherSelected(value)
    };
    // 
-   const morningShiftOptions: SelectProps['options'] = shiftList.filter((shift: any) => shift.shift === "morning").map((shift: any) => ({
+   const morningShiftOptions: SelectProps['options'] = shiftList && shiftList?.filter((shift: any) => shift.shift === "morning")?.map((shift: any) => ({
       label: shift.name,
       value: shift.id,
 
    }))
-   const afternoonShiftOptions: SelectProps['options'] = shiftList.filter((shift: any) => shift.shift === "afternoon").map((shift: any) => ({
+   const afternoonShiftOptions: SelectProps['options'] = shiftList && shiftList?.filter((shift: any) => shift.shift === "afternoon")?.map((shift: any) => ({
       label: shift.name,
       value: shift.id
    }))
-   const eveningShiftOptions: SelectProps['options'] = shiftList.filter((shift: any) => shift.shift === "evening").map((shift: any) => ({
+   const eveningShiftOptions: SelectProps['options'] = shiftList && shiftList?.filter((shift: any) => shift.shift === "evening")?.map((shift: any) => ({
       label: shift.name,
       value: shift.id
    }))
@@ -112,7 +112,7 @@ const Schedule = () => {
       setShiftSelected(value);
    };
    // 
-   const roomOptions: SelectProps['options'] = roomList.map((room: any) => ({
+   const roomOptions: SelectProps['options'] = roomList && roomList?.map((room: any) => ({
       label: room.name,
       value: room.id
    }));
@@ -122,11 +122,11 @@ const Schedule = () => {
 
    // 
    const subjectOptions: SelectProps['options'] = isAdmin
-      ? subjectList.map((subject: any) => ({
+      ? subjectList && subjectList?.map((subject: any) => ({
          label: subject?.name,
          value: subject?.id
       }))
-      : teacherSubjectRelation.map((subject: any) => ({
+      : teacherSubjectRelation?.map((subject: any) => ({
          label: subject?.name,
          value: subject?.id
       }))
@@ -142,11 +142,11 @@ const Schedule = () => {
       }
    });
    const classOptions: SelectProps['options'] = isAdmin
-      ? classList.map((cls: any) => ({
+      ? classList && classList?.map((cls: any) => ({
          label: cls.name,
          value: cls.id
       }))
-      : Array.from(uniqueClassMap.values()).map((cls: any) => ({
+      : Array.from(uniqueClassMap.values())?.map((cls: any) => ({
          label: cls?.classes?.name,
          value: cls?.classes?.id
       }))

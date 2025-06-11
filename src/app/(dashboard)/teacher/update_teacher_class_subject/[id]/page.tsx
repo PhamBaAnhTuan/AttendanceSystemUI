@@ -73,7 +73,7 @@ const UpdateTeacherClassSubjectPage = () => {
    // 
    useEffect(() => {
       if (teacherClassRelation) {
-         const classObj = teacherClassRelation.map((cls: any) => cls?.classes?.id);
+         const classObj = teacherClassRelation?.map((cls: any) => cls?.classes?.id);
          setInitialTeacherClass(classObj)
          setClassSelected(classObj);
       } else {
@@ -134,7 +134,7 @@ const UpdateTeacherClassSubjectPage = () => {
       }
       if (classesToAdd.length > 0) {
          // console.log('ID classes to add: ', classesToAdd)
-         const classPayload = classesToAdd.map(classID => ({
+         const classPayload = classesToAdd?.map(classID => ({
             teacher_id: teacherID,
             class_id: classID,
             subject_id: subjectSelected
@@ -153,7 +153,7 @@ const UpdateTeacherClassSubjectPage = () => {
       }
    };
    // 
-   const subjectOptions: SelectProps['options'] = teacherSubjectRelation.map((subject: any) => ({
+   const subjectOptions: SelectProps['options'] = teacherSubjectRelation?.map((subject: any) => ({
       label: subject?.name,
       value: subject?.id
    }));
@@ -161,7 +161,7 @@ const UpdateTeacherClassSubjectPage = () => {
       setSubjectSelected(value);
    };
    // 
-   const classOptions: SelectProps['options'] = classList.map((cls: any) => ({
+   const classOptions: SelectProps['options'] = classList?.map((cls: any) => ({
       label: cls.name,
       value: cls.id
    }));

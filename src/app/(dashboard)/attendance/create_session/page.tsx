@@ -60,7 +60,7 @@ const CreateAttendanceSession = () => {
       }
    }, [subjectSelected])
    //
-   const teacherOptions: SelectProps['options'] = Array.from(teacherList.values()).map((teacher: any) => ({
+   const teacherOptions: SelectProps['options'] = Array.from(teacherList.values())?.map((teacher: any) => ({
       label: teacher?.fullname,
       value: teacher?.id
    }));
@@ -68,7 +68,7 @@ const CreateAttendanceSession = () => {
       setTeacherSelected(value);
    };
    //
-   const subjectOptions: SelectProps['options'] = Array.from(teacherSubjectRelation.values()).map((subject: any) => ({
+   const subjectOptions: SelectProps['options'] = Array.from(teacherSubjectRelation.values())?.map((subject: any) => ({
       label: subject?.name,
       value: subject?.id
    }));
@@ -83,7 +83,7 @@ const CreateAttendanceSession = () => {
          uniqueClassMap.set(className, cls);
       }
    });
-   const classOptions: SelectProps['options'] = Array.from(uniqueClassMap.values()).map((cls: any) => ({
+   const classOptions: SelectProps['options'] = Array.from(uniqueClassMap.values())?.map((cls: any) => ({
       label: cls?.classes?.name,
       value: cls?.classes?.id
    }));

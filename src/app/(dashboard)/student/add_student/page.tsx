@@ -36,7 +36,7 @@ const AddStudentPage = () => {
 
 
    // 
-   const classOptions: SelectProps['options'] = classList.map((cls: any) => ({
+   const classOptions: SelectProps['options'] = classList?.map((cls: any) => ({
       label: cls.name,
       value: cls.id
    }));

@@ -114,7 +114,7 @@ export const getTeacherSubjectRelation = async (
 		});
 		const data = res.data;
 		console.log("get Teacher-Subject relation res: ", data);
-		const subjects = data.map((item: any) => item?.subject);
+		const subjects = data?.map((item: any) => item?.subject);
 		console.log("subjects relation: ", subjects);
 		setTeacherSubjectRelation(subjects);
 	} catch (error: any) {
@@ -128,7 +128,7 @@ export const addTeacherSubjectRelation = async (token: string | null, teacherID:
 		console.warn("There is no subject ID to add!");
 		return;
 	} else {
-		const subjectsPayload = subjectID.map((subjectId) => ({
+		const subjectsPayload = subjectID?.map((subjectId) => ({
 			teacher_id: teacherID,
 			subject_id: subjectId,
 		}));
