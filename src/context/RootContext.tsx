@@ -41,7 +41,7 @@ export const RootContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 					},
 				});
 				dispatch(getUserInfo(res.data));
-				console.log("User info fetched successfully:", res.data);
+				console.log("User info fetched successfully: ", res.data);
 			}
 		} catch (error) {
 			console.error("Failed to fetch user info:", error);

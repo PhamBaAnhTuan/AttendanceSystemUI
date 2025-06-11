@@ -1,7 +1,6 @@
 'use client'
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-// import '../room.css';
 import { useRouter } from 'next/navigation';
 import { API } from '@/constants/api';
 import { Button, Input, Form, message } from 'antd';
@@ -15,11 +14,6 @@ const AddRoomPage = () => {
    const [form] = Form.useForm();
    const [loading, setLoading] = useState(false);
 
-   const log = () => {
-      console.log(
-         // 'Img name: ', imgFileName,
-      );
-   }
    // Hàm xử lý submit form
    const handleSubmit = async (values: any) => {
       // console.log('Form values:', values);
@@ -30,7 +24,7 @@ const AddRoomPage = () => {
                'Authorization': `Bearer ${token}`
             }
          })
-         console.log('Post room res:', response);
+         // console.log('Post room res:', response);
          message.success('Thêm phòng học thành công!');
          router.replace('/room');
       } catch (error: any) {

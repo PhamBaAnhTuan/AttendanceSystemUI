@@ -1,7 +1,6 @@
 'use client'
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-// import '../schedule.css';
 import { useRouter } from 'next/navigation';
 import { API } from '@/constants/api';
 import { Button, Input, Form, Select, SelectProps, DatePicker, Checkbox } from 'antd';
@@ -14,6 +13,7 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 import { formatDate } from '@/utils/formatTime';
+import { getTeacherClassRelation, getTeacherList, getTeacherSubjectRelation } from '@/services/teacherServices';
 
 
 const CreateAttendanceSession = () => {
@@ -24,98 +24,63 @@ const CreateAttendanceSession = () => {
    const { showMessage } = useMessageContext()
 
    // teacher
-   const [teacherSubjectRelation, setTeacherSubjectRelation]: any = useState([]);
+   const [teacherList, setTeacherList]: any = useState([]);
    const [teacherSelected, setTeacherSelected]: any = useState([]);
    // subject
-   const [teacherClassSubjectList, setTeacherClassSubjectList]: any = useState([]);
+   const [teacherSubjectRelation, setTeacherSubjectRelation]: any = useState([]);
    const [subjectSelected, setSubjectSelected]: any = useState([]);
    // class
+   const [teacherClassRelation, setTeacherClassRelation]: any = useState([]);
    const [classSelected, setClassSelected]: any = useState([]);
 
-   const log = () => {
-      console.log(
-         '🔥 Is Admin: ', isAdmin,
-         '\n🔥 Info: ', info,
-
-         '\n Teacher selected: ', teacherSelected,
-         '\n\n Teacher-Class-Subject list: ', teacherClassSubjectList,
-
-         '\n Class option: ', classOptions,
-         '\n Class selected: ', classSelected,
-         '\n Subject option: ', subjectOptions,
-         '\n Subject selected: ', subjectSelected,
-      );
-   }
-
    useEffect(() => {
-      getTeacherSubjectRelation(info?.id);
-      setTeacherSelected(info?.id);
-      getTeacherClassSubjectList(info?.id, subjectSelected);
-      form.setFieldValue('teacher_id', info?.id);
-      form.setFieldValue('fullname', info?.fullname);
+      if (isAdmin) {
+         getTeacherList(token, setTeacherList)
+      } else {
+         if (info) setTeacherSelected(info?.id);
+         getTeacherSubjectRelation(token, teacherSelected, setTeacherSubjectRelation);
+         form.setFieldValue('teacher_id', info?.id);
+         form.setFieldValue('fullname', info?.fullname);
+      }
    }, [])
    useEffect(() => {
-      if (subjectSelected.length > 0) {
-         getTeacherClassSubjectList(info?.id, subjectSelected)
+      if (teacherSelected) {
+         getTeacherSubjectRelation(token, teacherSelected, setTeacherSubjectRelation)
+         setSubjectSelected([]);
+         setClassSelected([]);
+         form.resetFields(['subject_id']);
+         form.resetFields(['class_id']);
+      }
+   }, [teacherSelected])
+   useEffect(() => {
+      if (subjectSelected) {
+         getTeacherClassRelation(token, teacherSelected, subjectSelected, setTeacherClassRelation)
          setClassSelected([]);
          form.resetFields(['class_id']);
       }
    }, [subjectSelected])
-
-   // 
-   const getTeacherSubjectRelation = async (teacherID: string | undefined) => {
-      try {
-         const res = await axios.get(`${API.TEACHER_SUBJECT}?teacher_id=${teacherID}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Teacher-Subject list res:', data);
-         setTeacherSubjectRelation(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Teacher-Subject list:', error?.response?.detail || error?.message);
-      }
-   }
-   // 
-   const getTeacherClassSubjectList = async (teacherID: string | undefined, subjectID: string | undefined) => {
-      try {
-         const res = await axios.get(`${API.TEACHER_CLASS_SUBJECT}?teacher_id=${teacherID}&subject_id=${subjectID}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Teacher-Class-Subject list res:', data);
-         setTeacherClassSubjectList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Teacher-Class-Subject list:', error?.response?.detail || error?.message);
-      }
-   }
-
-   // 
-   // const uniqueSubjectMap = new Map<string, any>();
-   // teacherClassSubjectList.forEach((subject: any) => {
-   //    const subjectName = subject?.subject?.name;
-   //    if (!uniqueSubjectMap.has(subjectName)) {
-   //       uniqueSubjectMap.set(subjectName, subject);
-   //       // console.log('Unique subject added:', uniqueSubjectMap);
-   //    }
-   // });
+   //
+   const teacherOptions: SelectProps['options'] = Array.from(teacherList.values()).map((teacher: any) => ({
+      label: teacher?.fullname,
+      value: teacher?.id
+   }));
+   const handleTeacherSelected = (value: any) => {
+      setTeacherSelected(value);
+   };
+   //
    const subjectOptions: SelectProps['options'] = Array.from(teacherSubjectRelation.values()).map((subject: any) => ({
-      label: subject?.subject?.name,
-      value: subject?.subject?.id
+      label: subject?.name,
+      value: subject?.id
    }));
    const handleSubjectSelected = (value: any) => {
       setSubjectSelected(value);
    };
    // 
    const uniqueClassMap = new Map<string, any>();
-   teacherClassSubjectList.forEach((cls: any) => {
+   teacherClassRelation.forEach((cls: any) => {
       const className = cls?.classes?.name;
       if (!uniqueClassMap.has(className)) {
          uniqueClassMap.set(className, cls);
-         // console.log('Unique class added:', uniqueClassMap);
       }
    });
    const classOptions: SelectProps['options'] = Array.from(uniqueClassMap.values()).map((cls: any) => ({
@@ -148,7 +113,7 @@ const CreateAttendanceSession = () => {
                'Authorization': `Bearer ${token}`,
             },
          });
-         console.log('Post Session res:', res);
+         // console.log('Post Session res:', res);
          const sessionID = res.data.id;
          const sessionName = res.data.session_name;
          const time = res.data.start_time;
@@ -171,17 +136,36 @@ const CreateAttendanceSession = () => {
             wrapperCol={{ span: 18 }}
             onFinish={handleSubmit}
          >
-            {isTeacher && <Form.Item
+            {!isAdmin && <Form.Item
                label="Tên giáo viên"
                name="fullname"
             >
-               <Input disabled />
+               <Input readOnly={!isAdmin} />
             </Form.Item>}
 
+            {isAdmin && <Form.Item
+               label="Giáo viên"
+               name="teacher_id"
+               rules={[{ required: true, message: 'Vui lòng chọn Giáo viên!' }]}
+            >
+               <Select
+                  showSearch
+                  style={{ width: '100%' }}
+                  placeholder="Chọn giáo viên"
+                  value={teacherSelected}
+                  onChange={handleTeacherSelected}
+                  options={teacherOptions}
+                  filterOption={(input, option) =>
+                     normalizeString(option?.label?.toString() || '').includes(
+                        normalizeString(input)
+                     )
+                  }
+               />
+            </Form.Item>}
             <Form.Item
                label="Môn học"
                name="subject_id"
-               rules={[{ required: true, message: 'Vui lòng nhập Môn học!' }]}
+               rules={[{ required: true, message: 'Vui lòng chọn Môn!' }]}
             >
                <Select
                   showSearch
@@ -201,7 +185,7 @@ const CreateAttendanceSession = () => {
             <Form.Item
                label="Lớp học"
                name="class_id"
-               rules={[{ required: true, message: 'Vui lòng nhập Lớp học!' }]}
+               rules={[{ required: true, message: 'Vui lòng chọn Lớp học!' }]}
             >
                <Select
                   showSearch
@@ -222,12 +206,9 @@ const CreateAttendanceSession = () => {
                loading={loading}
                className='log-button'
             >
-               <h4>Thêm</h4>
+               <h4>Tạo</h4>
             </Button>
          </Form>
-         <Button onClick={log}>
-            <h4>LOG</h4>
-         </Button>
       </div>
    );
 };

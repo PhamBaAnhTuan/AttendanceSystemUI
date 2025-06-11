@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
-import '../../room.css'
 import axios from 'axios';
 import { API } from '@/constants/api';
 // hooks
@@ -22,12 +21,6 @@ const UpdateRoomPage = () => {
    const [loading, setLoading] = useState(false);
    const { showMessage } = useMessageContext()
    const [initialValues, setInitialValues]: any = useState({});
-
-   const log = () => {
-      console.log(
-         // 'Img name: ', imgFileName,
-      );
-   }
 
    useEffect(() => {
       const getRoomInfo = async () => {
@@ -73,7 +66,7 @@ const UpdateRoomPage = () => {
                },
             });
             const data = res.data
-            console.log('Post room res: ', data);
+            // console.log('Post room res: ', data);
             showMessage('success', 'Cập nhật phòng học thành công!');
             router.replace('/room');
          }

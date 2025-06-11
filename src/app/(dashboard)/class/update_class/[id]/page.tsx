@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Button, Form, Input } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
-import '../../class.css'
 import axios from 'axios';
 import { API } from '@/constants/api';
 // hooks
@@ -12,7 +11,7 @@ import { useMessageContext } from '@/context/messageContext'
 // utils
 import { isFormChanged, getChangedFields } from '@/utils/checkFormChange';
 // types
-import { ClassType } from '@/types/types';
+import { EntityType } from '@/types/types';
 
 const UpdateClassPage = () => {
    const router = useRouter();
@@ -73,9 +72,9 @@ const UpdateClassPage = () => {
                formData.append(key, value);
             });
 
-            for (const [key, value] of formData.entries()) {
-               console.log(`💥PUT ${key}:`, value);
-            }
+            // for (const [key, value] of formData.entries()) {
+            //    console.log(`💥PUT ${key}:`, value);
+            // }
 
             const res = await axios.put(`${API.CLASSES}${id}/`, formData, {
                headers: {

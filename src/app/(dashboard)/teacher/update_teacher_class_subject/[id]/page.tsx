@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 // 
 import { Button, Form, Input, Select, SelectProps } from 'antd';
-import '../../teacher.css'
 import axios from 'axios';
 import { API } from '@/constants/api';
 // hooks
@@ -16,6 +15,9 @@ import { checkRelationChange } from '@/utils/checkFormChange';
 // types
 import { UserInfoType } from '@/types/types';
 import { turnToArray } from '@/utils/turnToArray';
+// services
+import { getClassList } from '@/services/classServices';
+import { getTeacherClassRelation, getTeacherSubjectRelation } from '@/services/teacherServices';
 
 
 const UpdateTeacherClassSubjectPage = () => {
@@ -28,110 +30,80 @@ const UpdateTeacherClassSubjectPage = () => {
    const { showMessage } = useMessageContext()
 
    // subject
-   const [teacherSubjectList, setTeacherSubjectList]: any = useState([]);
+   const [teacherSubjectRelation, setTeacherSubjectRelation]: any = useState([]);
    const [subjectSelected, setSubjectSelected]: any = useState([]);
 
    // class
    const [classList, setClassList]: any = useState([]);
-   const [teacherClassSubjectList, setTeacherClassSubjectList]: any = useState([]);
-   const [initialTeacherClassSubject, setInitialTeacherClassSubject]: any = useState([]);
+   const [teacherClassRelation, setTeacherClassRelation]: any = useState([]);
+   const [initialTeacherClass, setInitialTeacherClass]: any = useState([]);
    const [classSelected, setClassSelected]: any = useState([]);
 
    const log = () => {
       console.log(
          '\n Teacher ID: ', id,
 
-         '\n\n 💥Teacher-Subject list: ', teacherSubjectList,
+         '\n\n 💥Teacher-Subject list: ', teacherSubjectRelation,
          '\n Subject selected: ', subjectSelected,
          // // 
          '\n\n Class list: ', classList,
-         '\n 💥Teacher-Class-Subject list: ', teacherClassSubjectList,
-         '\n Initial Teacher-Class-Subject: ', initialTeacherClassSubject,
+         '\n 💥Teacher-Class-Subject list: ', teacherClassRelation,
+         '\n Initial Teacher-Class-Subject: ', initialTeacherClass,
          '\n Teacher-Class-Subject selected: ', classSelected,
       );
    }
 
    useEffect(() => {
-      const getTeacherInfo = async () => {
-         setLoading(true);
-         try {
-            const res = await axios.get(`${API.USERS}${id}`, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            console.log('Get teacher info res:', data);
-            const values = {
-               id: data?.id,
-               fullname: data?.fullname,
-               email: data?.email,
-            }
-            form.setFieldsValue(values);
-            console.log('Form values: ', form.getFieldsValue())
-         } catch (error: any) {
-            console.error('Failed to fetch teacher:', error?.response?.detail || error?.message);
-         } finally {
-            setLoading(false);
-         }
-      };
-
-      // 
-      const getTeacherSubjectList = async () => {
-         try {
-            const res = await axios.get(`${API.TEACHER_SUBJECT}?teacher_id=${id}`, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            console.log('Get teacher-subject list res: ', data);
-            const subject = data.map((subj: any) => subj?.subject?.id)
-            setTeacherSubjectList(data);
-            setSubjectSelected(subject[0]);
-         } catch (error: any) {
-            console.error('Failed to get teacher-subject list: ', error?.response?.detail || error?.message);
-         }
-      };
-      // 
-      const getClassList = async () => {
-         try {
-            const res = await axios.get(API.CLASSES, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            console.log('Get class list res:', data);
-            setClassList(data);
-         } catch (error: any) {
-            console.error('Failed to fetch class list:', error?.response?.detail || error?.message);
-         }
-      };
-
-
       getTeacherInfo();
-      getTeacherSubjectList();
-      getClassList();
+      getTeacherSubjectRelation(token, id, setTeacherSubjectRelation);
+      getTeacherClassRelation(token, id, subjectSelected, setTeacherClassRelation)
+      getClassList(token, setClassList);
    }, [id, form]);
-
    // 
-   const getTeacherClassSubjectList = async (subjectID: string) => {
+   useEffect(() => {
+      if (teacherSubjectRelation) {
+         setSubjectSelected(teacherSubjectRelation[0]?.id);
+      }
+   }, [teacherSubjectRelation])
+
+   useEffect(() => {
+      if (subjectSelected) {
+         getTeacherClassRelation(token, id, subjectSelected, setTeacherClassRelation)
+      }
+   }, [subjectSelected])
+   // 
+   useEffect(() => {
+      if (teacherClassRelation) {
+         const classObj = teacherClassRelation.map((cls: any) => cls?.classes?.id);
+         setInitialTeacherClass(classObj)
+         setClassSelected(classObj);
+      } else {
+         setInitialTeacherClass([]);
+         setClassSelected([]);
+      }
+   }, [teacherClassRelation]);
+   const getTeacherInfo = async () => {
+      setLoading(true);
       try {
-         const response = await axios.get(`${API.TEACHER_CLASS_SUBJECT}?teacher_id=${id}&subject_id=${subjectID}`, {
+         const res = await axios.get(`${API.USERS}${id}`, {
             headers: {
                Authorization: `Bearer ${token}`
             }
          })
-         const data = response.data
-         console.log('Get teacher-class list res: ', data);
-         const classes = data.map((cls: any) => cls?.classes)
-         setTeacherClassSubjectList(classes);
+         const data = res.data
+         // console.log('Get teacher info res:', data);
+         const values = {
+            id: data?.id,
+            fullname: data?.fullname,
+            email: data?.email,
+         }
+         form.setFieldsValue(values);
       } catch (error: any) {
-         console.error('Failed to get teacher-class list: ', error?.response?.data || error?.message);
+         console.error('Failed to fetch teacher:', error?.response?.detail || error?.message);
+      } finally {
+         setLoading(false);
       }
    };
-
    // 
    const updateTeacherClassSubjectRelation = async (teacherID: string, initialClassIDs: string[], currentClassIDs: string[]) => {
       const initialID = turnToArray(initialClassIDs);
@@ -144,47 +116,47 @@ const UpdateTeacherClassSubjectPage = () => {
       );
 
       if (classesToRemove.length === 0 && classesToAdd.length === 0) {
-         console.log('No changes in Teacher-Class-Subject, skip update');
+         // console.log('No changes in Teacher-Class-Subject, skip update');
          return;
       }
       if (classesToRemove.length > 0) {
-         console.log('Class to remove: ', classesToRemove)
+         // console.log('Class to remove: ', classesToRemove)
          for (const classes of classesToRemove) {
-            console.log('ID classes to delete: ', classes)
+            // console.log('ID classes to delete: ', classes)
             try {
                await axios.delete(`${API.TEACHER_CLASS_SUBJECT}delete-by-param/?teacher_id=${teacherID}&class_id=${classes}&subject_id=${subjectSelected}`, {
                   headers: { Authorization: `Bearer ${token}` },
                });
-               console.log(`🗑️ Xóa thành công quan hệ Teacher-Class-Subject: \n${teacherID} and ${classes}`);
+               // console.log(`🗑️ Xóa thành công quan hệ Teacher-Class-Subject: \n${teacherID} and ${classes}`);
             } catch (error) {
                console.error(`❌ Lỗi xóa Teacher-Class-Subject ${classes}: `, error);
             }
          }
       }
       if (classesToAdd.length > 0) {
-         console.log('ID classes to add: ', classesToAdd)
+         // console.log('ID classes to add: ', classesToAdd)
          const classPayload = classesToAdd.map(classID => ({
             teacher_id: teacherID,
             class_id: classID,
             subject_id: subjectSelected
          }));
-         console.log("Class payload to add: ", classPayload)
+         // console.log("Class payload to add: ", classPayload)
          try {
             await axios.post(API.TEACHER_CLASS_SUBJECT, classPayload,
                {
                   headers: { Authorization: `Bearer ${token}` }
                }
             );
-            console.log(`➕ Thêm thành công Teacher-Class-Subject: \n${classPayload}`);
+            // console.log(`➕ Thêm thành công Teacher-Class-Subject: \n${classPayload}`);
          } catch (error) {
             console.error(`❌ Lỗi thêm Teacher-Class-Subject: `, error);
          }
       }
    };
    // 
-   const subjectOptions: SelectProps['options'] = teacherSubjectList.map((subject: any) => ({
-      label: subject.subject?.name,
-      value: subject.subject?.id
+   const subjectOptions: SelectProps['options'] = teacherSubjectRelation.map((subject: any) => ({
+      label: subject?.name,
+      value: subject?.id
    }));
    const handleSubjectSelected = (value: string[]) => {
       setSubjectSelected(value);
@@ -198,24 +170,9 @@ const UpdateTeacherClassSubjectPage = () => {
       setClassSelected(value);
    };
 
-   useEffect(() => {
-      getTeacherClassSubjectList(subjectSelected);
-   }, [subjectSelected])
-   // 
-   useEffect(() => {
-      if (teacherClassSubjectList.length > 0) {
-         const classObj = teacherClassSubjectList.map((cls: any) => cls?.id);
-         setInitialTeacherClassSubject(classObj)
-         setClassSelected(classObj);
-      } else {
-         setInitialTeacherClassSubject([]);
-         setClassSelected([]);
-      }
-   }, [teacherClassSubjectList]);
-
    // 
    const onFinish = async () => {
-      const isClassRelationChanged = checkRelationChange(initialTeacherClassSubject, classSelected);
+      const isClassRelationChanged = checkRelationChange(initialTeacherClass, classSelected);
 
       if (!isClassRelationChanged) {
          showMessage('info', 'Không có thay đổi nào!');
@@ -223,7 +180,7 @@ const UpdateTeacherClassSubjectPage = () => {
       }
       else {
          try {
-            await updateTeacherClassSubjectRelation(String(id), initialTeacherClassSubject, classSelected);
+            await updateTeacherClassSubjectRelation(String(id), initialTeacherClass, classSelected);
             showMessage('success', 'Thêm giáo viên vào lớp thành công!');
             router.replace('/teacher');
          } catch (error) {
@@ -248,21 +205,21 @@ const UpdateTeacherClassSubjectPage = () => {
                label="ID giáo viên"
                name="id"
             >
-               <Input disabled />
+               <Input readOnly />
             </Form.Item>
 
             <Form.Item
                label="Tên giáo viên"
                name="fullname"
             >
-               <Input disabled />
+               <Input readOnly />
             </Form.Item>
 
             <Form.Item
                label="Email"
                name="email"
             >
-               <Input disabled />
+               <Input readOnly />
             </Form.Item>
 
             <Form.Item

@@ -9,67 +9,49 @@ import { useAuth } from '@/hooks/useAuth';
 import { UserInfoType } from '@/types/types';
 // utils
 import { normalizeString } from '@/utils/normalizeString';
+import { getTeacherList } from '@/services/teacherServices';
 
-const StudentPage = () => {
-   const { token } = useAuth()
+const TeacherPage = () => {
+   const { token, info } = useAuth()
 
    const [loading, setLoading] = useState(false);
 
    const [search, setSearch] = useState('');
-   const [teachers, setTeachers] = useState<UserInfoType[]>([]);
+   const [teacherList, setTeacherList] = useState<UserInfoType[]>([]);
    const [filtered, setFiltered] = useState<UserInfoType[]>([]);
 
-   // const log = () => {
-   //    console.log(
-   //       '\nUser: ', user,
-   //       '\nToken: ', token,
-   //    );
-   // }
+   const log = () => {
+      console.log(
+         '\nUser: ', info,
+         '\nToken: ', token,
+      );
+   }
 
    useEffect(() => {
-      getTeacherList()
+      getTeacherList(token, setTeacherList)
    }, []);
-
-   const getTeacherList = async () => {
-      setLoading(true);
-      try {
-         const res = await axios.get(API.TEACHERS, {
-            headers: {
-               'Authorization': `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         setTeachers(data)
-         console.log('Get teacher res: ', data);
-      } catch (error: any) {
-         console.error('Failed to fetch teacher:', error?.response?.detail || error?.message);
-      } finally {
-         setLoading(false);
-      }
-   };
 
    useEffect(() => {
       const normalizedSearch = normalizeString(search);
-
-      const filteredData = teachers.filter(teacher =>
+      const filteredData = teacherList.filter(teacher =>
          normalizeString(teacher.fullname || '').includes(normalizedSearch)
       );
-
       setFiltered(filteredData);
-   }, [search, teachers]);
+   }, [search, teacherList]);
 
 
-   const confirmDelete = async (id: string, name: string) => {
-      if (confirm(`Bạn có chắc chắn muốn xóa giáo viên ${name} không?`)) {
-         console.log('teacher id: ', id)
+   const confirmDelete = async (id: string, fullname: string) => {
+      if (confirm(`Bạn có chắc chắn muốn xóa giáo viên ${fullname} không?`)) {
          try {
-            await axios.delete(`${API.TEACHERS}${id}/`)
-            message.success(`Xóa giáo viên ${name} thành công!`);
-            setTeachers(prev => prev.filter(s => s.id !== id));
+            await axios.delete(`${API.TEACHERS}${id}/`, {
+               headers: { Authorization: `Bearer ${token}` }
+            })
+            message.success(`Xóa giáo viên ${fullname} thành công!`);
+            setTeacherList(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));
          } catch (error: any) {
-            message.error(`Xóa giáo viên ${name} thất bại!`);
-            console.log('Failed to delete teacher:', error?.response?.detail || error?.message);
+            message.error(`Xóa giáo viên ${fullname} thất bại!`);
+            console.error('Failed to delete teacher:', error?.response?.detail || error?.message);
          }
       }
    };
@@ -77,7 +59,7 @@ const StudentPage = () => {
    return (
       <div>
          <div style={{ textAlign: 'center', alignContent: 'center' }}>
-            <h2>Danh sách giáo viên</h2>
+            <h1>Danh sách giáo viên</h1>
          </div>
 
          <div className="header">
@@ -101,18 +83,18 @@ const StudentPage = () => {
                   <List.Item
                      actions={[
                         <Button
-                           key={'1'}
-                           color="cyan" variant="filled"
-                           href={`/teacher/update_teacher/${item.id}`}
-                        >
-                           <h5>Chỉnh sửa</h5>
-                        </Button>,
-                        <Button
                            key={'2'}
                            color="cyan" variant="filled"
                            href={`/teacher/update_teacher_class_subject/${item.id}`}
                         >
                            <h5>Gán mối quan hệ với lớp</h5>
+                        </Button>,
+                        <Button
+                           key={'1'}
+                           color="cyan" variant="filled"
+                           href={`/teacher/update_teacher/${item.id}`}
+                        >
+                           <h5>Chỉnh sửa</h5>
                         </Button>,
                         <Button
                            key={'3'}
@@ -135,9 +117,8 @@ const StudentPage = () => {
                )}
             />
          </div>
-
       </div>
    );
 };
 
-export default StudentPage;
+export default TeacherPage;

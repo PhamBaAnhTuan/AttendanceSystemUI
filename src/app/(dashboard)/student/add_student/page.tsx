@@ -16,6 +16,9 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 import { formatDate } from '@/utils/formatTime';
 import { formatImageNameFile } from '@/utils/formatImageNameFile';
+import { getClassList } from '@/services/classServices';
+// services
+import { addStudentClassRelation } from '@/services/studentServices';
 
 const AddStudentPage = () => {
    const router = useRouter();
@@ -28,52 +31,10 @@ const AddStudentPage = () => {
    const [classList, setClassList]: any = useState([]);
    const [classSelected, setClassSelected]: any = useState([]);
 
-   const log = () => {
-      console.log(
-         // 'Img name: ', imgFileName,
-         '\n Class list: ', classList,
-         '\n Class selected: ', classSelected,
-      );
-   }
-
    useEffect(() => {
-      getClassList()
+      getClassList(token, setClassList)
    }, [])
 
-   // 
-   const getClassList = async () => {
-      try {
-         const res = await axios.get(`${API.CLASSES}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Class list res:', data);
-         setClassList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Class list:', error?.response?.detail || error?.message);
-      }
-   }
-
-   // 
-   const addStudentClass = async (studentID: number, classID: number[]) => {
-      // console.log('Teacher ID: ', teacherID)
-      // console.log('Class ID: ', classID)
-      const payload = {
-         student_id: studentID,
-         class_id: classID
-      }
-      try {
-         await axios.post(
-            API.STUDENT_CLASS, payload,
-            { headers: { Authorization: `Bearer ${token}` } }
-         );
-         console.log(`➕ Thêm thành công Student-Class!`);
-      } catch (error) {
-         console.error(`❌ Lỗi thêm Student-Class: `, error);
-      }
-   }
 
    // 
    const classOptions: SelectProps['options'] = classList.map((cls: any) => ({
@@ -87,8 +48,6 @@ const AddStudentPage = () => {
    // Pick picture
    const handleUploadChange = (info: any) => {
       const file = info.file.originFileObj
-      console.log('Img file name: ', file)
-
       return file
    };
 
@@ -112,7 +71,7 @@ const AddStudentPage = () => {
             }
             // 
             formData.append(field, value);
-            console.log(`💥${field}:`, value);
+            // console.log(`💥${field}:`, value);
          });
 
          if (values.avatar) {
@@ -125,7 +84,7 @@ const AddStudentPage = () => {
          const newRole = res.data?.role.name
          const newStudentFullname = res.data?.fullname
          if (newStudentID) {
-            await addStudentClass(newStudentID, classSelected);
+            await addStudentClassRelation(token, newStudentID, classSelected);
          }
          showMessage('loading', 'Thêm sinh viên thành công!\nChuyển sang trang thêm nhận diện khuôn mặt');
          router.replace(`/teacher/camera?id=${newStudentID}&role=${newRole}&fullname=${encodeURIComponent(newStudentFullname)}`);
@@ -212,6 +171,7 @@ const AddStudentPage = () => {
                rules={[{ required: true, message: 'Vui lòng chọn Lớp học!' }]}
             >
                <Select
+                  showSearch
                   style={{ width: '100%' }}
                   placeholder="Chọn lớp"
                   value={classSelected}

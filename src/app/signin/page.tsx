@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import '../(dashboard)/student/student.css';
 import { API_AUTH } from '@/constants/api';
 // router
 import { usePathname, useRouter } from 'next/navigation';
@@ -36,7 +35,6 @@ const SignInPage = () => {
 
    // 
    const handleSubmit = async (values: any) => {
-      // dispatch(signinStart())
       setLoading(true)
       try {
          const response = await axios.post(API_AUTH.SIGNIN, values)
@@ -55,8 +53,8 @@ const SignInPage = () => {
    };
 
    return (
-      <div className="signin-form-container">
-         <h2 className='form-title'>SIGN IN</h2>
+      <div className="form-container">
+         <h2 className='form-title'>Hệ thống quản lý điểm danh sinh viên</h2>
          <Form
             form={form}
             layout="horizontal"
@@ -81,7 +79,7 @@ const SignInPage = () => {
             </Form.Item>
 
             <Button type="primary" htmlType="submit" loading={loading} className='log-button'>
-               Sign In
+               <h4>ĐĂNG NHẬP</h4>
             </Button>
          </Form>
          {/* <button style={{ height: '8vh', width: '30%', alignSelf: 'center' }} onClick={log}>

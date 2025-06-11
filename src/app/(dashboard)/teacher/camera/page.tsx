@@ -11,7 +11,7 @@ import axios from 'axios';
 const directions = ['Nhìn thẳng vào màn hình 1', 'Nhìn thẳng vào màn hình 2', 'Nhìn thẳng vào màn hình 3', 'Quay sang TRÁI', 'Quay sang PHẢI'];
 
 function StreamCamera() {
-   const { token } = useAuth();
+   const { token, info } = useAuth();
    const router = useRouter();
 
    const searchParams = useSearchParams();
@@ -84,7 +84,7 @@ function StreamCamera() {
       const blob = await base64ToBlob(dataURL);
 
       const normalized = normalizeDirection(direction);
-      const fileName = `student_${ID}_${fullName}_${normalized}.png`;
+      const fileName = `${ID}_${fullName}_${normalized}.png`;
 
       return { blob, fileName };
    };
@@ -101,7 +101,7 @@ function StreamCamera() {
                clearInterval(countdownInterval);
                resolve();
             }
-         }, 1000);
+         }, 2000);
       });
    };
 
@@ -124,11 +124,14 @@ function StreamCamera() {
          const data = res.data
          if (data) {
             showMessage('success', 'Tất cả ảnh đã được tải lên thành công!');
-            console.log('All images uploaded successfully: ', data);
          }
-      } catch (error) {
-         console.error('Error uploading images:', error);
-         throw error;
+      } catch (error: any) {
+         const errorData = error?.response?.data?.error
+         console.error('Error uploading images: ', errorData);
+         console.error('Error: ', error?.response?.data);
+         if (errorData === 'No valid face encodings could be extracted from any images') {
+            showMessage('error', 'Không nhận diện được khuôn mặt!\nVui lòng chụp lại rõ nét hơn!');
+         }
       }
    };
 
@@ -159,29 +162,28 @@ function StreamCamera() {
    };
 
    return (
-      <div className='camera-container'>
-         <h1 className='heading'>Hướng dẫn chụp ảnh sinh viên</h1>
+      <div className='left-panel'>
+         <h1 className='heading'>Hướng dẫn chụp ảnh {role === 'teacher' ? 'Giáo viên' : 'Sinh viên'}</h1>
          <video ref={videoRef} autoPlay playsInline className='video' />
 
          {instruction && (
-            <div style={{ marginTop: 16, fontSize: 18, fontWeight: 500, color: '#555' }}>
+            <div style={{ fontSize: 18, fontWeight: 500, color: '#555' }}>
                👉 {instruction} {countdown > 0 && `(chụp sau ${countdown}s)`}
             </div>
          )}
 
          <div className='buttonGroup'>
-            <Button type="primary" onClick={startFullCaptureSequence} disabled={isCapturing}>
+            <Button color='primary' variant='outlined' onClick={startFullCaptureSequence} disabled={isCapturing}>
                <h4>{isCapturing ? 'Đang chụp...' : 'Bắt đầu chụp'}</h4>
             </Button>
-            <Button danger onClick={() => router.replace(`/${role}`)} disabled={isCapturing}>
-               {/* <Button danger onClick={startFullCaptureSequence} disabled={isCapturing}> */}
+            <Button color='danger' variant='outlined' onClick={() => router.replace(`/${role}`)} disabled={isCapturing}>
                <h4>Xong</h4>
             </Button>
          </div>
 
          {images.length > 0 && (
             <div className='imageList'>
-               <h2 className='imageListTitle'>Ảnh đã chụp:</h2>
+               <h4 style={{ marginTop: '10px' }} >Ảnh đã chụp:</h4>
                <div className='imageGrid'>
                   {images.map((img, idx) => (
                      <img key={idx} src={img} className='imageItem' alt={`capture-${idx}`} />

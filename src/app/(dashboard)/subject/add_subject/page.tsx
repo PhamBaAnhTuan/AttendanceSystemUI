@@ -1,7 +1,6 @@
 'use client'
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-// import '../subject.css';
 import { useRouter } from 'next/navigation';
 import { API } from '@/constants/api';
 import { Button, Input, Form, SelectProps, Select } from 'antd';
@@ -10,6 +9,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMessageContext } from '@/context/messageContext';
 // utils
 import { normalizeString } from '@/utils/normalizeString';
+// services
+import { getFacultyList } from '@/services/facultyServices';
+import { getMajorList } from '@/services/majorServices';
 
 const AddSubjectPage = () => {
    const { token } = useAuth()
@@ -26,51 +28,13 @@ const AddSubjectPage = () => {
    const [majorSelected, setMajorSelected]: any = useState([]);
 
    useEffect(() => {
-      getFacultyList()
+      getFacultyList(token, setFacultyList)
    }, [])
    useEffect(() => {
-      getMajorList(facultySelected)
+      getMajorList(token, facultySelected, setMajorList)
       setMajorSelected(undefined);
-      form.setFieldsValue({ major_id: undefined });
+      form.resetFields(['major_id']);
    }, [facultySelected])
-   // 
-   const getFacultyList = async () => {
-      setLoading(true);
-      try {
-         const res = await axios.get(`${API.FACULTY}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Faculty list res:', data);
-         setFacultyList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Faculty list:', error?.response?.data || error?.message);
-      } finally {
-         setLoading(false);
-      }
-   };
-   // 
-   const getMajorList = async (facultyID: string) => {
-      setLoading(true);
-      try {
-         const res = await axios.get(`${API.MAJOR}?faculty_id=${facultyID}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Major list res:', data);
-         setMajorList(data);
-
-      } catch (error: any) {
-         console.error('Failed to fetch Major list:', error?.response?.data || error?.message);
-      } finally {
-         setLoading(false);
-      }
-   };
-
    // 
    const facultyOptions: SelectProps['options'] = facultyList.map((faculty: any) => ({
       label: faculty.name,
@@ -104,6 +68,8 @@ const AddSubjectPage = () => {
          const errorData = error?.response?.data;
          if (errorData?.name?.[0] === 'subject with this name already exists.') {
             showMessage('error', 'Tên môn học đã tồn tại, vui lòng nhập tên khác!');
+         } if (errorData?.credit?.[0] === 'A valid integer is required.') {
+            showMessage('error', 'Vui lòng nhập Số tín chỉ thành số!');
          }
          console.error('Post Subject error: ', error);
       } finally {
@@ -171,7 +137,7 @@ const AddSubjectPage = () => {
             <Form.Item
                label="Số tín chỉ"
                name="credit"
-               rules={[{ required: true, message: 'Vui lòng nhập Tên số tín chỉ!' }]}
+               rules={[{ required: true, message: 'Vui lòng nhập Số tín chỉ!' }]}
             >
                <Input />
             </Form.Item>

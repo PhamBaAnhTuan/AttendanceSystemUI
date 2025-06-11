@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-// import './room.css'
 import { useRouter } from 'next/navigation';
 import { Button, List, message, Skeleton, Input } from 'antd';
 import { API } from '@/constants/api'
@@ -10,6 +9,8 @@ import { useAuth } from '@/hooks/useAuth';
 // types
 import { EntityType } from '@/types/types';
 import { normalizeString } from '@/utils/normalizeString';
+// services
+import { getRoomList } from '@/services/roomServices';
 
 const ClassPage = () => {
    const { info, isAdmin, token } = useAuth()
@@ -17,7 +18,7 @@ const ClassPage = () => {
    const [loading, setLoading] = useState(false);
 
    const [search, setSearch] = useState('');
-   const [rooms, setRooms] = useState<EntityType[]>([]);
+   const [roomList, setRoomList] = useState<EntityType[]>([]);
    const [filtered, setFiltered] = useState<EntityType[]>([]);
 
    const log = () => {
@@ -28,48 +29,27 @@ const ClassPage = () => {
    }
 
    useEffect(() => {
-      getRoomList(token)
+      getRoomList(token, setRoomList)
    }, []);
-
-   const getRoomList = async (token: string | any) => {
-      setLoading(true);
-      try {
-         const res = await axios.get(API.ROOMS, {
-            headers: {
-               'Authorization': `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get room res: ', data);
-         setRooms(data);
-      } catch (error: any) {
-         console.error('Failed to fetch room:', error?.response?.data || error?.message);
-      } finally {
-         setLoading(false);
-      }
-   };
-
    // Filter list when search input changes
    useEffect(() => {
       const normalizedSearch = normalizeString(search);
-
-      const filteredData = rooms.filter((room: any) =>
+      const filteredData = roomList.filter((room: any) =>
          normalizeString(room.name || '').includes(normalizedSearch)
       );
-
       setFiltered(filteredData);
-   }, [search, rooms]);
+   }, [search, roomList]);
 
    const confirmDelete = async (id: number, name: string) => {
       if (confirm(`Bạn có chắc chắn muốn xóa phòng ${name} không?`)) {
          try {
             const res = await axios.delete(`${API.ROOMS}${id}/`)
             message.success(`Xóa phòng ${name} thành công!`);
-            setRooms(prev => prev.filter(s => s.id !== id));
+            setRoomList(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));
          } catch (error: any) {
             message.error(`Xóa phòng ${name} thất bại!`);
-            console.log('Failed to delete room:', error?.response?.data || error?.message);
+            console.error('Failed to delete room:', error?.response?.data || error?.message);
          }
       }
    };
@@ -77,7 +57,7 @@ const ClassPage = () => {
    return (
       <div>
          <div style={{ textAlign: 'center', alignContent: 'center' }}>
-            <h2>Danh sách phòng học</h2>
+            <h1>Danh sách phòng học</h1>
          </div>
 
          <div className="header">

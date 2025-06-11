@@ -1,31 +1,34 @@
 
 'use client';
-import './attendance.css';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
 import { API } from '@/constants/api';
-import { Button } from 'antd';
+import { Button, Table } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
 import { useMessageContext } from '@/context/messageContext';
+// utils
+import dayjs from 'dayjs';
+import { formatDate, formatDateTime, formatTime } from '@/utils/formatTime';
+import { recognizedColumns, RecognizedTableType } from '@/components/RecognizedStudentTable';
 
 function StreamCamera() {
    const { token } = useAuth();
    const router = useRouter();
    const searchParams = useSearchParams();
    const sessionID = searchParams.get('sessionID');
-   const videoRef = useRef<HTMLVideoElement>(null);
-
    const { showMessage } = useMessageContext();
-   const [images, setImages] = useState<string[]>([]);
+
+   const [loading, setLoading] = useState(false)
+   const videoRef = useRef<HTMLVideoElement>(null);
+   const [isStop, setIsStop] = useState(false);
    const [isCapturing, setIsCapturing] = useState(false);
-   const [instruction, setInstruction] = useState('');
+   const captureLoopRef = useRef(false);
+
    const [recognizedStudents, setRecognizedStudents] = useState<any[]>([]);
 
-   // Hướng dẫn từng ảnh
-   const directions = ['Chụp chính diện', 'Chụp nghiêng trái', 'Chụp nghiêng phải'];
-
+   const log = () => console.log('recog student: ', recognizedStudents)
    // Mở camera và tạo session điểm danh
    useEffect(() => {
       const startCamera = async () => {
@@ -64,6 +67,7 @@ function StreamCamera() {
       formData.append('image', imageBlob);
 
       try {
+         console.log('post img...')
          const res = await axios.post(
             `${API.ATTENDANCE}${sessionID}/take_attendance/`,
             formData,
@@ -81,7 +85,6 @@ function StreamCamera() {
                return [...prevStudents, ...newStudents];
             });
          }
-
       } catch (error: any) {
          console.error('Lỗi gửi ảnh lên nhận diện:', error.response.data);
       }
@@ -102,21 +105,30 @@ function StreamCamera() {
       const blob = await base64ToBlob(dataURL);
 
       await sendToAttendanceSession(blob);
-      setImages((prev) => [...prev, dataURL]);
    };
-
-   // Tiến trình chụp 3 ảnh
-   const startFullCaptureSequence = async () => {
-      if (!sessionID) return;
+   // 
+   const startCapture = async () => {
+      // if (!sessionID || isCapturing) return;
       setIsCapturing(true);
-      for (let i = 0; i < directions.length; i++) {
-         setInstruction(directions[i]);
-         await new Promise(res => setTimeout(res, 800));
+      setIsStop(false);
+      captureLoopRef.current = true;
+      const loop = async () => {
+         if (!captureLoopRef.current || isStop) {
+            console.log('⏸️ Đã tạm dừng điểm danh');
+            setIsCapturing(false);
+            return;
+         }
+
          await captureAndSend();
-      }
-      setInstruction('✅ Đã hoàn tất điểm danh');
-      setIsCapturing(false);
+         setTimeout(loop, 1000); // chờ 1s rồi gọi lại
+      };
+
+      loop()
    };
+   const stopCapture = () => {
+      setIsStop(true)
+      captureLoopRef.current = false;
+   }
    // End attendance session
    const endAttendanceSession = async () => {
       if (!sessionID) return;
@@ -131,50 +143,67 @@ function StreamCamera() {
          );
          const data = res.data;
          console.log('End session res: ', data);
-         if (data) {
-            showMessage('success', 'Phiên điểm danh đã kết thúc thành công!');
-            router.replace('/attendance/attendance_list');
-         }
+         showMessage('success', 'Phiên điểm danh đã kết thúc thành công!');
+         router.replace('/attendance/attendance_list');
       } catch (error) {
          console.error('End session error: ', error);
       }
    };
 
+   // 
+   const originalData: RecognizedTableType[] = recognizedStudents?.map((attend: any) => {
+      return {
+         key: attend?.student_id,
+         id: attend.student_id,
+         fullname: attend.student_name,
+         recognized_time: dayjs(attend?.recognized_time).format(formatDateTime)
+      }
+   })
+
    return (
       <div className="camera-container">
-
          <div className="left-panel">
             <h1 className="heading">Điểm danh sinh viên</h1>
             <video ref={videoRef} autoPlay playsInline className="video" />
-            <div style={{ marginTop: 16, fontSize: 18, fontWeight: 500, color: '#555' }}>
-               {sessionID
-                  ? instruction || 'Đã sẵn sàng điểm danh'
-                  : '⏳ Đang tạo phiên điểm danh...'}
-            </div>
             <div className="buttonGroup">
-               <Button type="primary" onClick={startFullCaptureSequence} disabled={isCapturing || !sessionID}>
-                  <h4>{isCapturing ? 'Đang chụp...' : 'Bắt đầu chụp'}</h4>
+               <Button color='primary' variant='outlined' onClick={startCapture} disabled={isCapturing || !sessionID}>
+                  <h4>{isCapturing ? 'Đang thực hiện điểm danh...' : 'Bắt đầu điểm danh'}</h4>
                </Button>
-               <Button danger onClick={endAttendanceSession} disabled={isCapturing}>
-                  <h4>Thoát</h4>
+               <Button color='danger' variant='outlined' onClick={stopCapture}>
+                  <h4>Tạm dừng</h4>
+               </Button>
+               <Button color='primary' variant='outlined' onClick={endAttendanceSession} disabled={isCapturing}>
+                  {/* <Button color='primary' variant='outlined' onClick={log} disabled={isCapturing}> */}
+                  <h4>Hoàn thành điểm danh</h4>
                </Button>
             </div>
          </div>
 
-         <div className="right-panel">
-            <h3>Danh sách sinh viên đã nhận diện</h3>
+         <aside className="right-panel">
+            <h1 className="heading">Danh sách sinh viên đã điểm danh</h1>
             {recognizedStudents.length === 0 ? (
-               <p>Chưa có sinh viên nào được nhận diện.</p>
+               <p>Chưa có sinh viên nào được điểm danh</p>
             ) : (
-               recognizedStudents.map((sv, idx) => (
-                  <div key={idx} className="student-item">
-                     <strong>{sv.student_id} - {sv.student_name}</strong>
-                     <small>Thời gian: {new Date(sv.recognized_time || Date.now()).toLocaleTimeString()}</small>
-                  </div>
-               ))
+               // recognizedStudents.map((sv, idx) => (
+               //    <div key={idx} className="student-item">
+               //       <h4>{sv.student_id} - {sv.student_name}</h4>
+               //       <h5>Thời gian: {dayjs(sv.recognized_time).format(formatDateTime)}</h5>
+               //    </div>
+               // ))
+
+               <Table<RecognizedTableType>
+                  className='student-table'
+                  columns={recognizedColumns}
+                  dataSource={originalData}
+                  size="middle"
+                  bordered
+                  pagination={false}
+                  scroll={{ x: 'max-content', y: 'calc(100vh - 230px)' }}
+               />
+
             )}
-         </div>
-      </div>
+         </aside>
+      </div >
    );
 
 }

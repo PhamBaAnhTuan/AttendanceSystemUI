@@ -19,10 +19,10 @@ body {
 
 /* Căn giữa app nếu cần */
 main {
-	width: 100%;
-	max-width: 1200px;
+	/* width: 100%; */
+	/* max-width: 1200px; */
 	margin: 0 auto;
-	padding: 2rem;
+	padding: 1rem;
 }
 
 /* Link mặc định */
@@ -48,4 +48,297 @@ a:hover {
 
 .button:hover {
 	background-color: #2980b9;
+}
+
+/*  */
+
+/* student.css */
+
+.header {
+	height: 10vh;
+	/* width: 70vw; */
+	margin: 0 auto;
+	display: flex;
+	justify-content: space-between;
+	text-align: center;
+	align-items: center;
+	gap: 16px;
+}
+.session-list-header {
+	height: 10vh;
+	/* width: 70vw; */
+	margin: 0 auto;
+	display: flex;
+	/* justify-content: space-between; */
+	text-align: center;
+	align-items: center;
+	gap: 16px;
+}
+
+.search {
+	flex: 1;
+	padding: 10px 14px;
+	font-size: 16px;
+	border-radius: 8px;
+	border: 1px solid #cbd5e1;
+	transition: 0.2s ease;
+}
+
+.search:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.add-button {
+	background-color: #3b82f6 !important;
+	border: none;
+	font-weight: 600;
+	color: white !important;
+	padding: 20px 20px;
+	border-radius: 8px;
+	transition: background 0.3s ease;
+}
+
+.add-button:hover {
+	background-color: #1e6ae3 !important;
+}
+.delete-button {
+	background-color: #e01f15 !important;
+	border: none;
+	font-weight: 600;
+	color: white !important;
+	padding: 20px 20px;
+	border-radius: 8px;
+	transition: background 0.3s ease;
+}
+
+.delete-button:hover {
+	background-color: #c33019 !important;
+}
+
+/*  */
+.actionText {
+	color: #0070f3;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+.actionText:hover {
+	text-decoration: underline;
+	color: blue;
+}
+
+/* Form */
+.form-container {
+	max-width: 600px;
+	margin: 40px auto;
+	padding: 30px;
+	border: 1px solid #ccc;
+	border-radius: 12px;
+	background-color: #fff;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.form-title {
+	font-size: 28px;
+	font-weight: bold;
+	text-align: center;
+	margin-bottom: 24px;
+	color: #0f172a;
+}
+
+.log-button {
+	height: 5vh;
+	width: 100%;
+}
+
+label {
+	font-weight: 500;
+	margin-bottom: 6px;
+	color: #334155;
+}
+
+input {
+	padding: 10px 30px;
+	/* border-radius: 8px; */
+	border: 1px solid #cbd5e1;
+	transition: border 0.2s ease;
+	font-size: 15px;
+}
+
+input:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.link {
+	text-align: right;
+	margin-top: 10px;
+}
+.link:hover {
+	color: #3b82f6;
+	text-decoration: underline;
+}
+
+/* Camera */
+.camera-container {
+	/* padding: 20px; */
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.heading {
+	/* font-size: 24px; */
+	font-weight: bold;
+	margin-bottom: 16px;
+}
+
+.video {
+	width: 100%;
+	max-width: 600px;
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.imageListTitle {
+	font-size: 20px;
+	margin-bottom: 12px;
+	font-weight: 600;
+}
+
+.imageGrid {
+	margin-top: 10px;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 16px;
+}
+
+.imageItem {
+	width: 100%;
+	border-radius: 6px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Attendance cam */
+.camera-container {
+	display: flex;
+	flex-direction: row;
+	align-items: baseline;
+	gap: 24px;
+	padding: 20px;
+	background-color: #f9f9f9;
+	/* height: 100vh; */
+	box-sizing: border-box;
+	font-family: "Segoe UI", sans-serif;
+}
+
+.left-panel,
+.right-panel {
+	background-color: #fff;
+	border-radius: 12px;
+	padding: 20px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	flex: 1;
+	/* overflow-y: auto; */
+	justify-items: center;
+}
+
+.heading {
+	/* font-size: 24px; */
+	/* font-weight: 600; */
+	color: #333;
+	margin-bottom: 16px;
+	text-align: center;
+}
+
+/* .video {
+	width: 100%;
+	height: auto;
+	border-radius: 8px;
+	border: 2px solid #ccc;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+} */
+
+.buttonGroup {
+	margin-top: 10px;
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.imageList {
+	justify-items: center;
+}
+
+.imageList h3 {
+	font-size: 18px;
+	/* margin-bottom: 12px; */
+	color: #444;
+}
+
+.imageGrid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.imageItem {
+	width: 80px;
+	height: 80px;
+	object-fit: cover;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+}
+
+/* .right-panel h3 {
+	font-size: 20px;
+	margin-bottom: 16px;
+	color: #333;
+	text-align: center;
+} */
+
+.student-item {
+	width: 100%;
+	padding: 12px;
+	margin-bottom: 12px;
+	background-color: #e6f7ff;
+	border-left: 5px solid #1890ff;
+	border-radius: 8px;
+	box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+}
+
+.student-item h4 {
+	display: block;
+	color: #111;
+	margin-bottom: 4px;
+}
+
+.student-item h5 {
+	color: #666;
+}
+
+/*  */
+.student-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 1rem;
+	font-family: sans-serif;
+}
+
+.student-table th,
+.student-table td {
+	border: 1px solid #ccc;
+	padding: 8px 12px;
+	text-align: left;
+}
+
+.student-table thead {
+	background-color: #f5f5f5;
+}
+
+.student-table tr:nth-child(even) {
+	background-color: #f9f9f9;
 }

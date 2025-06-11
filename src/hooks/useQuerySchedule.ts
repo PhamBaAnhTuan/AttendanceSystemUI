@@ -17,7 +17,7 @@ interface UseScheduleQueryProps {
 	setShiftSelected: (v: any) => void;
 	setRoomSelected: (v: any) => void;
 	setSubjectSelected: (v: any) => void;
-	setSchedule: (data: any) => void;
+	setScheduleList: (data: any) => void;
 }
 
 export function useScheduleQuery({
@@ -36,7 +36,7 @@ export function useScheduleQuery({
 	setShiftSelected,
 	setRoomSelected,
 	setSubjectSelected,
-	setSchedule,
+	setScheduleList,
 }: UseScheduleQueryProps) {
 	const [loading, setLoading] = useState(false);
 	const [shouldQuery, setShouldQuery] = useState(false);
@@ -93,7 +93,7 @@ export function useScheduleQuery({
 				const res = await axios.get(`${API.SCHEDULE}${query}`, {
 					headers: { Authorization: `Bearer ${token}` },
 				});
-				setSchedule(res.data);
+				setScheduleList(res.data);
 			} catch (error: any) {
 				console.error("Get schedule error: ", error?.response?.data);
 			} finally {

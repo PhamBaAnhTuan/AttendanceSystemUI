@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import './class.css'
 import { useRouter } from 'next/navigation';
 import { Avatar, Button, List, Skeleton, Input } from 'antd';
 import { API } from '@/constants/api'
@@ -11,58 +10,52 @@ import { useMessageContext } from '@/context/messageContext'
 // types
 import { normalizeString } from '@/utils/normalizeString';
 import { EntityType } from '@/types/types';
+import { getClassList } from '@/services/classServices';
+import { getTeacherClassRelation } from '@/services/teacherServices';
 
 const ClassPage = () => {
+   const router = useRouter();
    const { token, isAdmin, info } = useAuth()
-   const API_URL = isAdmin ? API.CLASSES : API.TEACHER_CLASS;
+   const API_URL = isAdmin ? API.CLASSES : API.TEACHER_CLASS_SUBJECT;
 
    const [loading, setLoading] = useState(false);
    const { showMessage } = useMessageContext()
 
    const [search, setSearch] = useState('');
-   const [classes, setClasses] = useState<EntityType[]>([]);
+   const [classList, setClassList] = useState<EntityType[]>([]);
+   const [teacherClassRelation, setTeacherClassRelation] = useState([]);
    const [filtered, setFiltered] = useState<EntityType[]>([]);
 
    const log = () => {
       console.log(
          '\nRole: ', info?.role.name,
          '\nToken: ', token,
-         '\nClasses: ', classes,
+         '\nClasses: ', classList,
          '\nFiltered: ', filtered,
       );
    }
 
    useEffect(() => {
-      getClassList()
-   }, []);
-
-   const getClassList = async () => {
-      setLoading(true);
-      try {
-         const res = await axios.get(API_URL, {
-            headers: {
-               'Authorization': `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         const classesData = isAdmin ? data : data.map((cls: any) => cls.classes);
-         setClasses(classesData);
-      } catch (error: any) {
-         console.error('Failed to fetch class:', error?.response?.data || error?.message);
-      } finally {
-         setLoading(false);
+      if (isAdmin) {
+         getClassList(token, setClassList)
+      } else {
+         getTeacherClassRelation(token, info?.id, undefined, setTeacherClassRelation)
       }
-   };
-
+   }, []);
+   useEffect(() => {
+      if (teacherClassRelation) {
+         const classes = teacherClassRelation.map((item: any) => item?.classes)
+         setClassList(classes)
+      }
+   }, [teacherClassRelation])
+   // 
    useEffect(() => {
       const normalizedSearch = normalizeString(search);
-
-      const filteredData = classes.filter(cls =>
-         normalizeString(cls.name || '').includes(normalizedSearch)
+      const filteredData = classList?.filter(cls =>
+         normalizeString(cls?.name || '').includes(normalizedSearch)
       );
-
       setFiltered(filteredData);
-   }, [search, classes]);
+   }, [search, classList]);
 
    const confirmDelete = async (id: number, name: string) => {
       if (confirm(`Bạn có chắc chắn muốn xóa lớp ${name} không?`)) {
@@ -71,11 +64,11 @@ const ClassPage = () => {
                { headers: { Authorization: `Bearer ${token}` } }
             )
             showMessage('success', `Xóa lớp ${name} thành công!`);
-            setClasses(prev => prev.filter(s => s.id !== id));
+            setClassList(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));
          } catch (error: any) {
             showMessage('error', `Xóa lớp ${name} thất bại!`);
-            console.log('Failed to delete class:', error?.response?.data || error?.message);
+            console.error('Failed to delete class:', error?.response?.data || error?.message);
          }
       }
    };
@@ -106,6 +99,12 @@ const ClassPage = () => {
                renderItem={(item: any) => (
                   <List.Item
                      actions={[
+                        <Button
+                           color="cyan" variant="filled"
+                           onClick={() => router.push(`student?classID=${item.id}`)}
+                        >
+                           <h5>Danh sách sinh viên</h5>
+                        </Button>,
                         isAdmin && <Button
                            color="cyan" variant="filled"
                            href={`/class/update_class/${item.id}`}

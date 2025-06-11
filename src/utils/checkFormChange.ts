@@ -77,7 +77,7 @@ export const getChangedFields = (initial: any, current: any): Record<string, any
 
 	// Chỉ so sánh những field có trong form submit
 	Object.keys(current).forEach((key) => {
-		if (!(key in initial)) return; // ⚠️ Bỏ qua field không có trong initialValues
+		// if (!(key in initial)) return; // ⚠️ Bỏ qua field không có trong initialValues
 
 		if (key === "avatar") {
 			if (isAvatarChanged(initial.avatar, current.avatar)) {

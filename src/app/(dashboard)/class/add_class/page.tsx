@@ -1,7 +1,6 @@
 'use client'
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import '../class.css';
 import { useRouter } from 'next/navigation';
 import { API } from '@/constants/api';
 import { Button, Input, Form, Select, SelectProps } from 'antd';
@@ -95,7 +94,7 @@ const AddClassPage = () => {
                'Authorization': `Bearer ${token}`
             }
          })
-         console.log('Post class res:', response);
+         // console.log('Post class res:', response);
          showMessage('success', 'Thêm lớp học thành công!');
          router.replace('/class');
       } catch (error: any) {

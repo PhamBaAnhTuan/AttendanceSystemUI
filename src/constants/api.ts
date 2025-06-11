@@ -1,6 +1,5 @@
 // export const API_URL = "https://660d2bd96ddfa2943b33731c.mockapi.io/api/users/";
 
-// export const API_BASE = "http://172.21.1.130:8000";
 export const API_BASE = "http://127.0.0.1:8000";
 export const API_URL = "http://127.0.0.1:8000/api";
 export const CLOUD_URL = "https://api.cloudinary.com/v1_1/dx69v1c83/image/upload";
@@ -11,7 +10,6 @@ export const API = {
 
 	TEACHERS: `${API_BASE}/user/?role_id=teacher`,
 	TEACHER_SUBJECT: `${API_BASE}/api/teacher-subject/`,
-	TEACHER_CLASS: `${API_BASE}/api/teacher-class/`,
 	TEACHER_CLASS_SUBJECT: `${API_BASE}/api/teacher-class-subject/`,
 
 	STUDENTS: `${API_BASE}/user/?role_id=student`,
@@ -32,7 +30,7 @@ export const API = {
 	ATTENDANCE: `${API_BASE}/face_recog/attendance/`,
 	FACE_TRAINING: `${API_BASE}/face_recog/face_training/`,
 
-	PERIOD: `${API_BASE}/api/period/`,
+	SHIFT: `${API_BASE}/api/period/`,
 	SCHEDULE: `${API_BASE}/api/schedule/`,
 };
 export const API_AUTH = {

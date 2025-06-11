@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 // 
 import { Button, DatePicker, Form, Input, Select, SelectProps, Upload } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import '../../teacher.css'
 import axios from 'axios';
 import { API, API_BASE } from '@/constants/api';
 // hooks
@@ -23,11 +22,13 @@ import { formatImageNameFile } from '@/utils/formatImageNameFile';
 // types
 import { UserInfoType } from '@/types/types';
 import { turnToArray } from '@/utils/turnToArray';
+import { getSubjectList } from '@/services/subjectServices';
+import { getTeacherSubjectRelation } from '@/services/teacherServices';
 
 
 const UpdateTeacherPage = () => {
    const router = useRouter();
-   const { token } = useAuth()
+   const { token, isAdmin } = useAuth()
 
    const { id } = useParams();
    const [form] = Form.useForm();
@@ -37,87 +38,49 @@ const UpdateTeacherPage = () => {
 
    // subject
    const [subjectList, setSubjectList]: any = useState([]);
+   const [teacherSubjectRelation, setTeacherSubjectRelation]: any = useState([]);
    const [initialTeacherSubject, setInitialTeacherSubject]: any = useState([]);
    const [subjectSelected, setSubjectSelected]: any = useState([]);
 
-   const log = () => {
-      console.log(
-         '\n Teacher ID: ', id,
-         '\n\n Subject list: ', subjectList,
-         '\n Initial Teacher - Subject: ', initialTeacherSubject,
-         '\n Subject selected: ', subjectSelected,
-
-         '\n\n Initial form values: ', initialValues,
-         '\n Form values: ', form.getFieldsValue(),
-      );
-   }
-
    useEffect(() => {
-      const getTeacherInfo = async () => {
-         setLoading(true);
-         try {
-            const res = await axios.get(`${API.USERS}${id}`, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            const values: UserInfoType = {
-               id: data?.id,
-               fullname: data?.fullname,
-               email: data?.email,
-               address: data?.address,
-               phone_number: data?.phone_number,
-               date_of_birth: data?.date_of_birth
-                  ? dayjs(data?.date_of_birth, formatDate)
-                  : null,
-               avatar: data?.avatar,
-               role: data?.role?.name,
-            }
-            setInitialValues(values)
-            form.setFieldsValue(values);
-         } catch (error: any) {
-            console.error('Failed to fetch teacher:', error?.response?.detail || error?.message);
-         } finally {
-            setLoading(false);
-         }
-      };
-      // 
-      const getSubjectList = async () => {
-         try {
-            const res = await axios.get(API.SUBJECTS, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            setSubjectList(data);
-         } catch (error: any) {
-            console.error('Failed to fetch subject list:', error?.response?.data || error?.message);
-         }
-      };
-      // Bang trung gian Teacher - Subject
-      const getTeacherSubjectList = async () => {
-         try {
-            const res = await axios.get(`${API.TEACHER_SUBJECT}?teacher_id=${id}`, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            const subjectObj = data.map((subj: any) => subj?.subject.id);
-            setInitialTeacherSubject(subjectObj);
-            setSubjectSelected(subjectObj)
-         } catch (error: any) {
-            console.error('Failed to get teacher-subject list: ', error?.response?.data || error?.message);
-         }
-      };
-
-      getTeacherInfo();
-      getSubjectList();
-      getTeacherSubjectList();
+      getTeacherInfo(id);
+      if (isAdmin) {
+         getSubjectList(token, setSubjectList);
+         getTeacherSubjectRelation(token, id, setTeacherSubjectRelation);
+      }
    }, [id, form]);
-
+   useEffect(() => {
+      const subjectObjID = teacherSubjectRelation.map((item: any) => item?.id);
+      setInitialTeacherSubject(subjectObjID);
+      setSubjectSelected(subjectObjID)
+   }, [teacherSubjectRelation])
+   // 
+   const getTeacherInfo = async (teacherID: number | any) => {
+      try {
+         const res = await axios.get(`${API.USERS}${teacherID}`, {
+            headers: {
+               Authorization: `Bearer ${token}`
+            }
+         })
+         const data = res.data
+         const values: UserInfoType = {
+            id: data?.id,
+            fullname: data?.fullname,
+            email: data?.email,
+            address: data?.address,
+            phone_number: data?.phone_number,
+            date_of_birth: data?.date_of_birth
+               ? dayjs(data?.date_of_birth, formatDate)
+               : null,
+            avatar: data?.avatar,
+            role: data?.role?.name,
+         }
+         setInitialValues(values)
+         form.setFieldsValue(values);
+      } catch (error: any) {
+         console.error('Failed to fetch teacher:', error?.response?.detail || error?.message);
+      }
+   };
    // 
    const updateTeacherSubject = async (teacherID: number, initialSubjectIDs: string[], currentSubjectIDs: string[]) => {
       const initialID = turnToArray(initialSubjectIDs);
@@ -164,8 +127,8 @@ const UpdateTeacherPage = () => {
 
    // 
    const subjectOptions: SelectProps['options'] = subjectList.map((subject: any) => ({
-      label: subject.name,
-      value: subject.id
+      label: subject?.name,
+      value: subject?.id
    }));
    const handleSubjectSelected = (value: string[]) => {
       setSubjectSelected(value);
@@ -233,7 +196,7 @@ const UpdateTeacherPage = () => {
 
    return (
       <div className="form-container">
-         <h1 className="form-title">Cập nhật giáo viên</h1>
+         <h1 className="form-title">Cập nhật {isAdmin ? `giáo viên` : `thông tin`}</h1>
          <Form
             form={form}
             layout="horizontal"
@@ -246,7 +209,7 @@ const UpdateTeacherPage = () => {
                label="ID giáo Viên"
                name="id"
             >
-               <Input disabled />
+               <Input readOnly />
             </Form.Item>
             <Form.Item
                label="Role"
@@ -256,7 +219,7 @@ const UpdateTeacherPage = () => {
             </Form.Item>
 
             <Form.Item
-               label="Tên giáo Viên"
+               label="Tên giáo viên"
                name="fullname"
                rules={[{ required: true, message: 'Vui lòng nhập Tên giáo viên!' }]}
             >
@@ -272,7 +235,7 @@ const UpdateTeacherPage = () => {
             </Form.Item>
 
             <Form.Item
-               label="Địa chỉ thường trú"
+               label="Địa chỉ"
                name="address"
                rules={[{ required: true, message: 'Vui lòng nhập Địa chỉ!' }]}
             >
@@ -297,6 +260,7 @@ const UpdateTeacherPage = () => {
 
             <Form.Item
                label="Môn học"
+               hidden={!isAdmin}
             >
                <Select
                   mode="multiple"

@@ -1,8 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import './student.css'
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Avatar, Button, List, Skeleton, Input } from 'antd';
 import { API } from '@/constants/api'
 // hooks
@@ -10,72 +9,57 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppDispatch } from '@/hooks/useDispatch';
 import { useMessageContext } from '@/context/messageContext';
 // types
-import { EntityType } from '@/types/types';
+import { EntityType, UserInfoType } from '@/types/types';
 import { normalizeString } from '@/utils/normalizeString';
+import { getStudentClassRelation, getStudentList } from '@/services/studentServices';
 
 
 const StudentPage = () => {
    const dispatch = useAppDispatch()
+   const searchParams = useSearchParams();
+   const classID = searchParams.get('classID');
    const router = useRouter();
-   const { token, info } = useAuth()
+   const { token, info, isAdmin } = useAuth()
 
    const [loading, setLoading] = useState(false);
    const { showMessage } = useMessageContext()
 
    const [search, setSearch] = useState('');
-   const [students, setStudents] = useState<EntityType[]>([]);
-   const [filtered, setFiltered] = useState<EntityType[]>([]);
-
-   const log = () => {
-      console.log(
-         '\nUser: ', info,
-         '\nToken: ', token,
-      );
-   }
+   const [studentList, setStudentList] = useState<UserInfoType[]>([]);
+   const [filtered, setFiltered] = useState<UserInfoType[]>([]);
+   const [className, setClassName] = useState();
 
    useEffect(() => {
-      getStudentList(token)
-   }, []);
-
-   const getStudentList = async (token: string | any) => {
-      setLoading(true);
-      try {
-         const response = await axios.get(`${API.STUDENTS}`, {
-            headers: {
-               'Authorization': `Bearer ${token}`
-            }
-         })
-         const data = response.data
-         console.log('Get student res: ', data);
-         setStudents(data);
-      } catch (error: any) {
-         console.error('Failed to fetch students:', error?.response?.data || error?.message);
-      } finally {
-         setLoading(false);
+      if (classID) {
+         getStudentClassRelation(token, classID, setStudentList, setClassName)
+      } else {
+         getStudentList(token, setStudentList)
       }
-   };
+   }, []);
 
    // Filter list when search input changes
    useEffect(() => {
-      const normalizedSearch = normalizeString(search);
+      if (studentList) {
+         const normalizedSearch = normalizeString(search);
+         const filteredData = studentList.filter(student =>
+            normalizeString(student.fullname || '').includes(normalizedSearch)
+         );
+         setFiltered(filteredData);
+      } else {
+         setFiltered([])
+      }
+   }, [search, studentList]);
 
-      const filteredData = students.filter(student =>
-         normalizeString(student.name || '').includes(normalizedSearch)
-      );
-
-      setFiltered(filteredData);
-   }, [search, students]);
-
-   const confirmDelete = async (id: number, name: string) => {
-      if (confirm(`Bạn có chắc chắn muốn xóa sinh viên ${name} không?`)) {
+   const confirmDelete = async (id: number, fullname: string) => {
+      if (confirm(`Bạn có chắc chắn muốn xóa sinh viên ${fullname} không?`)) {
          try {
             await axios.delete(`${API.USERS}${id}/`)
-            showMessage('success', `Xóa sinh viên ${name} thành công!`);
-            setStudents(prev => prev.filter(s => s.id !== id));
+            showMessage('success', `Xóa sinh viên ${fullname} thành công!`);
+            setStudentList(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));
          } catch (error: any) {
-            showMessage('error', `Xóa sinh viên ${name} thất bại!`);
-            console.log('Failed to delete student:', error?.response?.data || error?.message);
+            showMessage('error', `Xóa sinh viên ${fullname} thất bại!`);
+            console.error('Failed to delete student:', error?.response?.data || error?.message);
          }
       }
    };
@@ -83,7 +67,7 @@ const StudentPage = () => {
    return (
       <div>
          <div style={{ textAlign: 'center', alignContent: 'center' }}>
-            <h2>Danh sách sinh viên</h2>
+            <h1>Danh sách sinh viên {classID ? `lớp ${className}` : ''}</h1>
          </div>
 
          <div className="header">
@@ -106,21 +90,28 @@ const StudentPage = () => {
                renderItem={(item: any) => (
                   <List.Item
                      actions={[
-                        <Button
+                        !isAdmin && <Button
+                           key={'1'}
+                           color="cyan" variant="filled"
+                           href={`/student/update_student/${item.id}`}
+                        >
+                           <h5>Thông tin sinh viên</h5>
+                        </Button>,
+                        isAdmin && <Button
                            key={'1'}
                            color="cyan" variant="filled"
                            href={`/student/update_student/${item.id}`}
                         >
                            <h5>Chỉnh sửa</h5>
                         </Button>,
-                        <Button
+                        isAdmin && <Button
                            key={'2'}
                            color="cyan" variant="filled"
                            href={`/student/update_student_class/${item.id}`}
                         >
                            <h5>Thêm vào lớp</h5>
                         </Button>,
-                        <Button
+                        isAdmin && <Button
                            key={'3'}
                            color="danger" variant="filled"
                            onClick={() => confirmDelete(item.id, item.fullname)}
@@ -131,9 +122,12 @@ const StudentPage = () => {
                   >
                      <Skeleton avatar title={false} loading={item.loading} active>
                         <List.Item.Meta
-                           avatar={<Avatar src={item.avatar} />}
-                           title={item.fullname}
-                           description={item.email}
+                           avatar={<Avatar src={item?.avatar} />}
+                           title={item?.fullname}
+                           description={item?.email}
+                           children={[
+                              <h4>{item?.fullname}</h4>
+                           ]}
                         />
                      </Skeleton>
                   </List.Item>

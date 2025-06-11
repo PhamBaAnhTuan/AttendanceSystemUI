@@ -15,6 +15,9 @@ import { checkClassRelationChange } from '@/utils/checkFormChange';
 // types
 import { UserInfoType } from '@/types/types';
 import { turnToArray } from '@/utils/turnToArray';
+// services
+import { getStudentClassRelation, getStudentClassRelationByStudentID } from '@/services/studentServices';
+import { getClassList } from '@/services/classServices';
 
 
 const UpdateTeacherClassSubjectPage = () => {
@@ -31,79 +34,35 @@ const UpdateTeacherClassSubjectPage = () => {
    const [initialStudentClass, setInitialStudentClass]: any = useState([]);
    const [classSelected, setClassSelected]: any = useState([]);
 
-   const log = () => {
-      console.log(
-         '\n Student ID: ', id,
-
-         '\n\n Class list: ', classList,
-         '\n Initial Student-Class: ', initialStudentClass,
-         '\n Student-Class selected: ', classSelected,
-      );
-   }
-
    useEffect(() => {
-      const getStudentInfo = async () => {
-         setLoading(true);
-         try {
-            const res = await axios.get(`${API.USERS}${id}`, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            console.log('Get student info res:', data);
-            const values = {
-               id: data?.id,
-               fullname: data?.fullname,
-               email: data?.email,
-            }
-            form.setFieldsValue(values);
-         } catch (error: any) {
-            console.error('Failed to fetch Student:', error?.response?.detail || error?.message);
-         } finally {
-            setLoading(false);
-         }
-      };
-
-      const getStudentClassRelation = async () => {
-         try {
-            const res = await axios.get(`${API.STUDENT_CLASS}?student_id=${id}`, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            console.log('Get Student-Class res: ', data);
-            const classes = data.map((cls: any) => cls?.classes?.id)
-            setInitialStudentClass(classes);
-            setClassSelected(classes);
-         } catch (error: any) {
-            console.error('Failed to get Student-Class: ', error?.response?.detail || error?.message);
-         }
-      };
-      // 
-      const getClassList = async () => {
-         try {
-            const res = await axios.get(API.CLASSES, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            console.log('Get Class list res:', data);
-            setClassList(data);
-         } catch (error: any) {
-            console.error('Failed to fetch Class list:', error?.response?.detail || error?.message);
-         }
-      };
-
-
       getStudentInfo();
-      getStudentClassRelation();
-      getClassList();
+      getStudentClassRelationByStudentID(token, id, setInitialStudentClass, setClassSelected);
+      getClassList(token, setClassList);
    }, [id, form]);
 
-   // 
+   const getStudentInfo = async () => {
+      setLoading(true);
+      try {
+         const res = await axios.get(`${API.USERS}${id}`, {
+            headers: {
+               Authorization: `Bearer ${token}`
+            }
+         })
+         const data = res.data
+         // console.log('Get student info res:', data);
+         const values = {
+            id: data?.id,
+            fullname: data?.fullname,
+            email: data?.email,
+         }
+         form.setFieldsValue(values);
+      } catch (error: any) {
+         console.error('Failed to fetch Student:', error?.response?.detail || error?.message);
+      } finally {
+         setLoading(false);
+      }
+   };
+   //
    const updateStudentClassRelation = async (studentID: string, initialClassIDs: string[], currentClassIDs: string[]) => {
       const initialID = turnToArray(initialClassIDs)
       const currentID = turnToArray(currentClassIDs)
@@ -115,34 +74,34 @@ const UpdateTeacherClassSubjectPage = () => {
       );
 
       if (classesToRemove.length === 0 && classesToAdd.length === 0) {
-         console.log('No changes in Student-Class, skip update');
+         // console.log('No changes in Student-Class, skip update');
          return;
       }
       if (classesToRemove.length > 0) {
-         console.log('Class to remove: ', classesToRemove)
+         // console.log('Class to remove: ', classesToRemove)
          try {
             await axios.delete(`${API.STUDENT_CLASS}delete-by-param/?student_id=${studentID}&class_id=${classesToRemove}`, {
                headers: { Authorization: `Bearer ${token}` },
             });
-            console.log(`🗑️ Xóa thành công quan hệ Student-Class: \n${studentID} and ${classesToRemove}`);
+            // console.log(`🗑️ Xóa thành công quan hệ Student-Class: \n${studentID} and ${classesToRemove}`);
          } catch (error) {
             console.error(`❌ Lỗi xóa Student-Class ${classesToRemove}: `, error);
          }
       }
       if (classesToAdd.length > 0) {
-         console.log('ID classes to add: ', classesToAdd)
+         // console.log('ID classes to add: ', classesToAdd)
          const classPayload = classesToAdd.map(classID => ({
             student_id: studentID,
             class_id: classID,
          }));
-         console.log("Class payload to add: ", classPayload)
+         // console.log("Class payload to add: ", classPayload)
          try {
             await axios.post(API.STUDENT_CLASS, classPayload,
                {
                   headers: { Authorization: `Bearer ${token}` }
                }
             );
-            console.log(`➕ Thêm thành công Student-Class: \n${classPayload}`);
+            // console.log(`➕ Thêm thành công Student-Class: \n${classPayload}`);
          } catch (error) {
             console.error(`❌ Lỗi thêm Student-Class: `, error);
          }
@@ -192,21 +151,21 @@ const UpdateTeacherClassSubjectPage = () => {
                label="ID sinh viên"
                name="id"
             >
-               <Input disabled />
+               <Input readOnly />
             </Form.Item>
 
             <Form.Item
                label="Tên sinh viên"
                name="fullname"
             >
-               <Input disabled />
+               <Input readOnly />
             </Form.Item>
 
             <Form.Item
                label="Email"
                name="email"
             >
-               <Input disabled />
+               <Input readOnly />
             </Form.Item>
 
             <Form.Item

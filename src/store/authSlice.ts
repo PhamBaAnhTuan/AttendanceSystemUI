@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface AuthState {
 	isAuthenticated?: boolean;
-	token?: string | null;
+	token: string | null;
 	refresh_token?: string | null;
 	info: UserInfoType | null;
 	scope?: "admin" | "teacher" | "student";
@@ -42,6 +42,7 @@ export const authSlice = createSlice({
 			state.refresh_token = null;
 			state.info = null;
 			state.scope = undefined;
+			state.isAdmin = undefined;
 		},
 	},
 });

@@ -15,31 +15,41 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 import { formatDate } from '@/utils/formatTime';
-import { normalizeString } from '@/utils/normalizeString';
+import { mapShiftToText, normalizeString } from '@/utils/normalizeString';
 // types
 import { columns, TableDataType } from '@/types/types';
+// services
+import { getTeacherClassRelation, getTeacherList, getTeacherSubjectRelation } from '@/services/teacherServices';
+import { getClassList } from '@/services/classServices';
+import { getSubjectList } from '@/services/subjectServices';
+import { getShiftList } from '@/services/shiftServices';
+import { getRoomList } from '@/services/roomServices';
 
 const Schedule = () => {
    const { token, scope, isAdmin, info } = useAuth()
-   const { showMessage } = useMessageContext()
-   // const [loading, setLoading] = useState(false);
+   // date
+   const [dateSelected, setDateSelected]: any = useState();
+   // teacher
+   const [teacherList, setTeacherList]: any = useState([]);
+   const [teacherSelected, setTeacherSelected]: any = useState();
+   const [teacherSubjectRelation, setTeacherSubjectRelation]: any = useState([]);
+   const [teacherClassRelation, setTeacherClassRelation]: any = useState([]);
+   // shift
+   const [shiftList, setShiftList]: any = useState([]);
+   const [shiftSelected, setShiftSelected]: any = useState();
+   // subject
+   const [subjectList, setSubjectList]: any = useState([]);
+   const [subjectSelected, setSubjectSelected]: any = useState();
+   // class
+   const [classList, setClassList]: any = useState([]);
+   const [classSelected, setClassSelected]: any = useState();
+   // room
+   const [roomList, setRoomList]: any = useState([]);
+   const [roomSelected, setRoomSelected]: any = useState();
+   // schedule
+   const [scheduleList, setScheduleList] = useState<TableDataType[]>([]);
 
-   // Helper chuyển shift từ tiếng Anh sang tiếng Việt
-   const mapShiftToText = (shift: string): string => {
-      switch (shift) {
-         case 'morning':
-            return '(Buổi sáng)';
-         case 'afternoon':
-            return '(Buổi chiều)';
-         case 'evening':
-            return '';
-         default:
-            return shift;
-      }
-   };
-   // 
-   const [schedule, setSchedule] = useState<TableDataType[]>([]);
-   const originalData: TableDataType[] = schedule.map(((sche: any) => ({
+   const scheduleData: TableDataType[] = scheduleList.map(((sche: any) => ({
       key: sche?.id,
       date: sche?.date,
       shift: `${sche?.period.name} ${mapShiftToText(sche?.period.shift)}`,
@@ -49,66 +59,18 @@ const Schedule = () => {
       subject: sche?.subject?.name,
    })))
 
-
-   const [dateSelected, setDateSelected]: any = useState();
-   // teacher
-   const [teacherList, setTeacherList]: any = useState([]);
-   const [teacherSelected, setTeacherSelected]: any = useState();
-   // shift
-   const [shiftList, setShiftList]: any = useState([]);
-   const [shiftSelected, setShiftSelected]: any = useState();
-   // subject
-   const [subjectList, setSubjectList]: any = useState([]);
-   const [teacherSubjectList, setTeacherSubjectList]: any = useState([]);
-   const [subjectSelected, setSubjectSelected]: any = useState();
-   // class
-   const [classList, setClassList]: any = useState([]);
-   const [teacherClassList, setTeacherClassList]: any = useState([]);
-   const [classSelected, setClassSelected]: any = useState();
-   // room
-   const [roomList, setRoomList]: any = useState([]);
-   const [roomSelected, setRoomSelected]: any = useState();
-
-   const log = () => {
-      console.log(
-         '🔥 Is Admin: ', isAdmin,
-         '\n🔥 Token: ', token,
-         '\n🔥 Scope: ', scope,
-         '\n🔥 User info: ', info,
-         '\n🔥 Schedule: ', schedule,
-
-         '\n Date selected: ', dateSelected,
-
-         '\n\n Teacher list: ', teacherList,
-         '\n Teacher-Subject list: ', teacherSubjectList,
-         '\n Teacher selected: ', teacherSelected,
-
-         '\n\n Shift list: ', shiftList,
-         '\n Shift selected: ', shiftSelected,
-         // 
-         '\n\n Room list: ', roomList,
-         '\n Room selected: ', roomSelected,
-         // 
-         '\n\n Class list: ', classList,
-         '\n Teacher-Class list: ', teacherClassList,
-         '\n Class selected: ', classSelected,
-         // 
-         '\n\n Subject list: ', subjectList,
-         '\n Subject selected: ', subjectSelected,
-      );
-   }
-
    useEffect(() => {
-      getPeriodList()
-      getRoomList()
+      getShiftList(token, setShiftList)
+      getRoomList(token, setRoomList)
       if (isAdmin) {
-         getTeacherList()
-         getClassList()
-         getSubjectList()
+         getTeacherList(token, setTeacherList)
+         getClassList(token, setClassList)
+         getSubjectList(token, setSubjectList)
+         getTeacherClassRelation(token, info?.id, undefined, setTeacherClassRelation)
       } else {
-         getTeacherSubjectList()
-         getTeacherClassList()
-         setTeacherSelected(info?.id)
+         if (info) setTeacherSelected(info?.id)
+         getTeacherSubjectRelation(token, info?.id, setTeacherSubjectRelation)
+         getTeacherClassRelation(token, info?.id, undefined, setTeacherClassRelation)
       }
       querySchedule(true)
    }, [])
@@ -124,52 +86,7 @@ const Schedule = () => {
          }
       } else setDateSelected(undefined)
    };
-   //
-   const getTeacherList = async () => {
-      try {
-         const res = await axios.get(`${API.TEACHERS}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Teacher list res:', data);
-         setTeacherList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Teacher list:', error?.response?.data || error?.message);
-      }
-   }
-   //
-   const getTeacherSubjectList = async () => {
-      try {
-         const res = await axios.get(`${API.TEACHER_SUBJECT}?teacher_id=${info?.id}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Teacher-Subject list res:', data);
-         setTeacherSubjectList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Teacher-Subject list:', error?.response?.detail || error?.message);
-      }
-   }
-   //
-   const getTeacherClassList = async () => {
-      try {
-         const res = await axios.get(`${API.TEACHER_CLASS_SUBJECT}?teacher_id=${info?.id}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Teacher-Class list res:', data);
-         setTeacherClassList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Teacher-Class list:', error?.response?.detail || error?.message);
-      }
-   }
-   // 
+   // teacher options
    const teacherOptions: SelectProps['options'] = teacherList.map((teacher: any) => ({
       label: teacher?.fullname,
       value: teacher?.id
@@ -177,21 +94,6 @@ const Schedule = () => {
    const handleTeacherSelected = (value: any) => {
       setTeacherSelected(value)
    };
-   // 
-   const getPeriodList = async () => {
-      try {
-         const res = await axios.get(`${API.PERIOD}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Period list res:', data);
-         setShiftList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Period list:', error?.response?.data || error?.message);
-      }
-   }
    // 
    const morningShiftOptions: SelectProps['options'] = shiftList.filter((shift: any) => shift.shift === "morning").map((shift: any) => ({
       label: shift.name,
@@ -210,90 +112,46 @@ const Schedule = () => {
       setShiftSelected(value);
    };
    // 
-   const getSubjectList = async () => {
-      try {
-         const res = await axios.get(`${API.SUBJECTS}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Subject list res:', data);
-         setSubjectList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Subject list:', error?.response?.data || error?.message);
-      }
-   }
-   // 
-   const subjectOptions: SelectProps['options'] = isAdmin ? subjectList.map((subject: any) => ({
-      label: subject.name,
-      value: subject.id
-   }))
-      : teacherSubjectList.map((subject: any) => ({
-         label: subject?.subject.name,
-         value: subject?.subject.id
-      }))
-   const handleSubjectSelected = (value: any) => {
-      setSubjectSelected(value);
-   };
-   // 
-   const getClassList = async () => {
-      try {
-         const res = await axios.get(`${API.CLASSES}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Class list res:', data);
-         setClassList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Class list:', error?.response?.data || error?.message);
-      }
-   };
-
-   // 
-   const uniqueClassMap = new Map<string, any>();
-   teacherClassList.forEach((cls: any) => {
-      const className = cls?.classes?.name;
-      if (!uniqueClassMap.has(className)) {
-         uniqueClassMap.set(className, cls);
-         // console.log('Unique class added:', uniqueClassMap);
-      }
-   });
-   const classOptions: SelectProps['options'] = isAdmin ? classList.map((cls: any) => ({
-      label: cls.name,
-      value: cls.id
-   }))
-      : Array.from(uniqueClassMap.values()).map((cls: any) => ({
-         label: cls?.classes.name,
-         value: cls?.classes.id
-      }))
-   const handleClassSelected = (value: any) => {
-      setClassSelected(value);
-   };
-   // 
-   const getRoomList = async () => {
-      try {
-         const res = await axios.get(`${API.ROOMS}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Room list res:', data);
-         setRoomList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Room list:', error?.response?.data || error?.message);
-      }
-   };
-   // 
    const roomOptions: SelectProps['options'] = roomList.map((room: any) => ({
       label: room.name,
       value: room.id
    }));
    const handleRoomSelected = (value: any) => {
       setRoomSelected(value);
+   };
+
+   // 
+   const subjectOptions: SelectProps['options'] = isAdmin
+      ? subjectList.map((subject: any) => ({
+         label: subject?.name,
+         value: subject?.id
+      }))
+      : teacherSubjectRelation.map((subject: any) => ({
+         label: subject?.name,
+         value: subject?.id
+      }))
+   const handleSubjectSelected = (value: any) => {
+      setSubjectSelected(value);
+   };
+   // 
+   const uniqueClassMap = new Map<string, any>();
+   teacherClassRelation.forEach((cls: any) => {
+      const className = cls?.classes?.name;
+      if (!uniqueClassMap.has(className)) {
+         uniqueClassMap.set(className, cls);
+      }
+   });
+   const classOptions: SelectProps['options'] = isAdmin
+      ? classList.map((cls: any) => ({
+         label: cls.name,
+         value: cls.id
+      }))
+      : Array.from(uniqueClassMap.values()).map((cls: any) => ({
+         label: cls?.classes?.name,
+         value: cls?.classes?.id
+      }))
+   const handleClassSelected = (value: any) => {
+      setClassSelected(value);
    };
 
    // Hàm xử lý submit form
@@ -313,13 +171,13 @@ const Schedule = () => {
       setShiftSelected,
       setRoomSelected,
       setSubjectSelected,
-      setSchedule
+      setScheduleList
    });
 
    return (
       <div>
          <div style={{ textAlign: 'center', alignContent: 'center' }}>
-            <h2>Danh sách thời khóa biểu</h2>
+            <h1>Danh sách thời khóa biểu</h1>
          </div>
          <div className='header'>
             <DatePicker
@@ -442,7 +300,7 @@ const Schedule = () => {
          <div >
             <Table<TableDataType>
                columns={columns}
-               dataSource={originalData}
+               dataSource={scheduleData}
                size="middle"
                bordered
                loading={loading}
@@ -450,12 +308,6 @@ const Schedule = () => {
                scroll={{ x: 'max-content', y: 'calc(100vh - 230px)' }}
             />
          </div>
-         {/* <Button
-            color="primary"
-            variant="solid"
-            size='large'
-            onClick={log}
-         ><h5>LOG</h5></Button> */}
       </div>
    )
 }

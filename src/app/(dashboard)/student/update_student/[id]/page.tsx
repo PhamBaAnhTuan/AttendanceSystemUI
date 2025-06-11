@@ -22,11 +22,14 @@ import { formatImageNameFile } from '@/utils/formatImageNameFile';
 import { turnToArray } from '@/utils/turnToArray';
 // types
 import { UserInfoType } from '@/types/types';
+// services
+import { getClassList } from '@/services/classServices';
+import { getStudentClassRelation, getStudentClassRelationByStudentID } from '@/services/studentServices';
 
 
 const UpdateStudentPage = () => {
    const router = useRouter();
-   const { token } = useAuth()
+   const { token, isAdmin } = useAuth()
 
    const { id } = useParams();
    const [form] = Form.useForm();
@@ -52,80 +55,47 @@ const UpdateStudentPage = () => {
    }
 
    useEffect(() => {
-      const getStudentInfo = async () => {
-         setLoading(true);
-         try {
-            const res = await axios.get(`${API.USERS}${id}`, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            console.log('Get Student info res:', data);
-            const values: UserInfoType = {
-               id: data?.id,
-               fullname: data?.fullname,
-               email: data?.email,
-               address: data?.address,
-               phone_number: data?.phone_number,
-               date_of_birth: data?.date_of_birth
-                  ? dayjs(data?.date_of_birth, formatDate)
-                  : null,
-               avatar: data?.avatar,
-               role: data?.role?.name,
-            }
-            setInitialValues(values)
-            form.setFieldsValue(values);
-            // console.log('Initial form values: ', initialValues)
-            // console.log('Form values: ', form.getFieldsValue())
-         } catch (error: any) {
-            console.error('Failed to fetch Student:', error?.response?.data || error?.message);
-         } finally {
-            setLoading(false);
-         }
-      };
-      // 
-      const getClassList = async () => {
-         try {
-            const res = await axios.get(API.CLASSES, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            console.log('Get Class list res:', data);
-            setClassList(data);
-         } catch (error: any) {
-            console.error('Failed to fetch Class list:', error?.response?.detail || error?.message);
-         }
-      };
-      //
-      const getStudentClassList = async () => {
-         try {
-            const res = await axios.get(`${API.STUDENT_CLASS}?student_id=${id}`, {
-               headers: {
-                  Authorization: `Bearer ${token}`
-               }
-            })
-            const data = res.data
-            console.log('Get Student-Class res: ', data);
-            const classes = data.map((cls: any) => cls.classes.id)
-            setInitialStudentClass(classes);
-            setClassSelected(classes);
-         } catch (error: any) {
-            console.error('Failed to get Student-Class: ', error?.response?.detail || error?.message);
-         }
-      };
-
       getStudentInfo();
-      getClassList();
-      getStudentClassList();
+      if (isAdmin) {
+         getClassList(token, setClassList);
+         getStudentClassRelationByStudentID(token, id, setInitialStudentClass, setClassSelected)
+      }
    }, [id, form]);
 
+   const getStudentInfo = async () => {
+      setLoading(true);
+      try {
+         const res = await axios.get(`${API.USERS}${id}`, {
+            headers: {
+               Authorization: `Bearer ${token}`
+            }
+         })
+         const data = res.data
+         // console.log('Get Student info res:', data);
+         const values: UserInfoType = {
+            id: data?.id,
+            fullname: data?.fullname,
+            email: data?.email,
+            address: data?.address,
+            phone_number: data?.phone_number,
+            date_of_birth: data?.date_of_birth
+               ? dayjs(data?.date_of_birth, formatDate)
+               : null,
+            avatar: data?.avatar,
+            role: data?.role?.name,
+         }
+         setInitialValues(values)
+         form.setFieldsValue(values);
+      } catch (error: any) {
+         console.error('Failed to fetch Student:', error?.response?.data || error?.message);
+      } finally {
+         setLoading(false);
+      }
+   };
    // Pick picture
    const handleUploadChange = (info: any) => {
       const file = info.file.originFileObj
-      console.log('Img file name: ', file)
+      // console.log('Img file name: ', file)
 
       return file
    };
@@ -156,7 +126,7 @@ const UpdateStudentPage = () => {
             await axios.delete(`${API.STUDENT_CLASS}delete-by-param/?student_id=${studentID}&class_id=${classesToRemove}`, {
                headers: { Authorization: `Bearer ${token}` },
             });
-            console.log(`🗑️ Xóa thành công quan hệ Student-Class: \n${studentID} and ${classesToRemove}`);
+            // console.log(`🗑️ Xóa thành công quan hệ Student-Class: \n${studentID} and ${classesToRemove}`);
          } catch (error) {
             console.error(`❌ Lỗi xóa Student-Class ${classesToRemove}: `, error);
          }
@@ -172,7 +142,7 @@ const UpdateStudentPage = () => {
                   headers: { Authorization: `Bearer ${token}` }
                }
             );
-            console.log(`➕ Thêm thành công Student-Class: \n${classPayload}`);
+            // console.log(`➕ Thêm thành công Student-Class: \n${classPayload}`);
          } catch (error) {
             console.error(`❌ Lỗi thêm Student-Class: `, error);
          }
@@ -239,7 +209,7 @@ const UpdateStudentPage = () => {
 
    return (
       <div className="form-container">
-         <h1 className="form-title">Cập nhật sinh viên</h1>
+         <h1 className="form-title">{isAdmin ? 'Cập nhật' : 'Thông tin'} sinh viên</h1>
          <Form
             form={form}
             layout="horizontal"
@@ -252,7 +222,7 @@ const UpdateStudentPage = () => {
                label="ID sinh viên"
                name="id"
             >
-               <Input disabled />
+               <Input readOnly />
             </Form.Item>
 
             <Form.Item
@@ -267,7 +237,7 @@ const UpdateStudentPage = () => {
                name="fullname"
                rules={[{ required: true, message: 'Vui lòng nhập Tên sinh viên!' }]}
             >
-               <Input allowClear />
+               <Input allowClear readOnly={!isAdmin} />
             </Form.Item>
 
             <Form.Item
@@ -275,15 +245,15 @@ const UpdateStudentPage = () => {
                name="email"
                rules={[{ required: true, type: 'email', message: 'Vui lòng nhập Email!' }]}
             >
-               <Input allowClear />
+               <Input allowClear readOnly={!isAdmin} />
             </Form.Item>
 
             <Form.Item
-               label="Địa chỉ thường trú"
+               label="Địa chỉ"
                name="address"
                rules={[{ required: true, message: 'Vui lòng nhập Địa chỉ!' }]}
             >
-               <Input allowClear />
+               <Input allowClear readOnly={!isAdmin} />
             </Form.Item>
 
             <Form.Item
@@ -291,7 +261,7 @@ const UpdateStudentPage = () => {
                name="phone_number"
                rules={[{ required: true, message: 'Vui lòng nhập Số điện thoại!' }]}
             >
-               <Input allowClear />
+               <Input allowClear readOnly={!isAdmin} />
             </Form.Item>
 
             <Form.Item
@@ -299,11 +269,12 @@ const UpdateStudentPage = () => {
                name="date_of_birth"
                rules={[{ required: true, type: 'date', message: 'Vui lòng nhập Ngày sinh!' }]}
             >
-               <DatePicker format={formatDate} />
+               <DatePicker format={formatDate} readOnly={!isAdmin} />
             </Form.Item>
 
             <Form.Item
                label="Lớp học"
+               hidden={!isAdmin}
             >
                <Select
                   style={{ width: '100%' }}
@@ -325,6 +296,7 @@ const UpdateStudentPage = () => {
                name="avatar"
                valuePropName="file"
                getValueFromEvent={handleUploadChange}
+               hidden={!isAdmin}
             >
                <Upload listType="picture-card" maxCount={1} onPreview={() => false}>
                   <button
@@ -337,13 +309,10 @@ const UpdateStudentPage = () => {
                </Upload>
             </Form.Item>
 
-            <Button htmlType="submit" type="primary" loading={loading} className='log-button'>
+            {isAdmin && <Button htmlType="submit" type="primary" loading={loading} className='log-button'>
                <h4>Cập nhật</h4>
-            </Button>
+            </Button>}
          </Form>
-         <Button onClick={log}>
-            <h4>LOG</h4>
-         </Button>
       </div>
    );
 };

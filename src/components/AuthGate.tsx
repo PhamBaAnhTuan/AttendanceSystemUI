@@ -4,7 +4,6 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import SignInPage from '../app/signin/page';
-import SignUpPage from '../app/signup/page';
 import { ConfigProvider } from 'antd';
 // context
 import { useAuth } from '@/hooks/useAuth';
@@ -24,9 +23,9 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
          '\nisAdmin: ', isAdmin
       )
 
-      if (!isAuthenticated && !['/signin', '/signup'].includes(pathname)) {
+      if (!isAuthenticated && !['/signin'].includes(pathname)) {
          router.replace('/signin');
-      } else if (isAuthenticated && ['/signin', '/signup'].includes(pathname)) {
+      } else if (isAuthenticated && ['/signin'].includes(pathname)) {
          router.replace('/');
       }
    }, [isAuthenticated, pathname]);
@@ -35,7 +34,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
    if (!isAuthenticated) {
       if (pathname === '/signin') return <SignInPage />;
-      if (pathname === '/signup') return <SignUpPage />;
       return <SignInPage />;
    }
 

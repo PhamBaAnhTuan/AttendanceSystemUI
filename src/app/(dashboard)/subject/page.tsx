@@ -10,55 +10,30 @@ import { useMessageContext } from '@/context/messageContext';
 // types
 import { normalizeString } from '@/utils/normalizeString';
 import { EntityType } from '@/types/types';
+// services
+import { getSubjectList } from '@/services/subjectServices';
 
 
 const SubjectPage = () => {
    const { info, token, isAdmin } = useAuth()
-   const API_URL = isAdmin ? API.SUBJECTS : API.TEACHER_SUBJECT;
 
-   const [loading, setLoading]: any = useState(false);
    const { showMessage } = useMessageContext()
 
    const [search, setSearch]: any = useState('');
-   const [subjects, setSubjects] = useState<EntityType[]>([]);
+   const [subjectList, setSubjectList] = useState<EntityType[]>([]);
    const [filtered, setFiltered] = useState<EntityType[]>([]);
 
-   const log = () => {
-      console.log(
-         '\nUser: ', info,
-         '\nToken: ', token,
-      );
-   }
-
    useEffect(() => {
-      getSubjectList()
+      getSubjectList(token, setSubjectList)
    }, []);
-
-   const getSubjectList = async () => {
-      setLoading(true);
-      try {
-         const res = await axios.get(API_URL, {
-            headers: {
-               'Authorization': `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         const subjectData = isAdmin ? data : data.map((subj: any) => subj.subject);
-         setSubjects(subjectData);
-      } catch (error: any) {
-         console.error('Failed to fetch Subject:', error?.response?.data || error?.message);
-      } finally {
-         setLoading(false);
-      }
-   };
-
+   // 
    useEffect(() => {
       const normalizedSearch = normalizeString(search);
-      const filteredData = subjects.filter(subj =>
+      const filteredData = subjectList.filter(subj =>
          normalizeString(subj.name || '').includes(normalizedSearch)
       );
       setFiltered(filteredData);
-   }, [search, subjects]);
+   }, [search, subjectList]);
 
    const confirmDelete = async (id: number, name: string) => {
       if (confirm(`Bạn có chắc chắn muốn xóa môn ${name} không?`)) {
@@ -67,11 +42,11 @@ const SubjectPage = () => {
                { headers: { Authorization: `Bearer ${token}` } }
             )
             showMessage('success', `Xóa môn ${name} thành công!`);
-            setSubjects(prev => prev.filter(s => s.id !== id));
+            setSubjectList(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));
          } catch (error: any) {
             showMessage('error', `Xóa môn ${name} thất bại!`);
-            console.log('Failed to delete Subject:', error?.response?.detail || error?.message);
+            console.error('Failed to delete Subject:', error?.response?.detail || error?.message);
          }
       }
    };
@@ -79,7 +54,7 @@ const SubjectPage = () => {
    return (
       <div>
          <div style={{ textAlign: 'center', alignContent: 'center' }}>
-            <h2>Danh sách môn học</h2>
+            <h1>Danh sách môn học</h1>
          </div>
 
          <div className="header">
@@ -95,7 +70,6 @@ const SubjectPage = () => {
          <div style={{ height: '75vh', overflow: 'auto', margin: '0 auto' }}>
             <List
                size='small'
-               loading={loading}
                itemLayout="horizontal"
                dataSource={filtered}
                renderItem={(item: any) => (

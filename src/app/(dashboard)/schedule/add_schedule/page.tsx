@@ -1,11 +1,9 @@
 'use client'
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-// import '../schedule.css';
 import { useRouter } from 'next/navigation';
 import { API } from '@/constants/api';
-import { Button, Input, Form, Select, SelectProps, DatePicker, Checkbox } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, Input, Form, Select, SelectProps, DatePicker } from 'antd';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
 import { useAppDispatch } from '@/hooks/useDispatch';
@@ -16,9 +14,14 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 import { formatDate } from '@/utils/formatTime';
-import { formatImageNameFile } from '@/utils/formatImageNameFile';
 // 
 import type { CheckboxOptionType, GetProp } from 'antd';
+// services
+import { getTeacherClassRelation, getTeacherList, getTeacherSubjectRelation } from '@/services/teacherServices';
+import { getClassList } from '@/services/classServices';
+import { getSubjectList } from '@/services/subjectServices';
+import { getShiftList } from '@/services/shiftServices';
+import { getRoomList } from '@/services/roomServices';
 
 
 const AddSchedulePage = () => {
@@ -31,14 +34,14 @@ const AddSchedulePage = () => {
    // teacher
    const [teacherList, setTeacherList]: any = useState([]);
    const [teacherSelected, setTeacherSelected]: any = useState([]);
+   const [teacherSubjectRelation, setTeacherSubjectRelation]: any = useState([]);
+   const [teacherClassRelation, setTeacherClassRelation]: any = useState([]);
    // subject
    const [shiftList, setShiftList]: any = useState([]);
    const [shiftSelected, setShiftSelected]: any = useState([]);
    // subject
-   const [teacherSubjectRelation, setTeacherSubjectRelation]: any = useState([]);
    const [subjectSelected, setSubjectSelected]: any = useState([]);
 
-   const [teacherClassSubjectList, setTeacherClassSubjectList]: any = useState([]);
    // class
    const [classList, setClassList]: any = useState([]);
    const [classSelected, setClassSelected]: any = useState([]);
@@ -46,136 +49,41 @@ const AddSchedulePage = () => {
    const [roomList, setRoomList]: any = useState([]);
    const [roomSelected, setRoomSelected]: any = useState([]);
 
-   const log = () => {
-      console.log(
-         '🔥 Is Admin: ', isAdmin,
-         '\n🔥 Info: ', info,
-
-         '\n\n Teacher list: ', teacherList,
-         '\n Teacher selected: ', teacherSelected,
-
-         '\n\n Shift list: ', shiftList,
-         '\n Shift selected: ', shiftSelected,
-         // 
-         '\n\n Room list: ', roomList,
-         '\n Room selected: ', roomSelected,
-         // 
-         '\n\n Teacher-Class-Subject list: ', teacherClassSubjectList,
-         '\n Class selected: ', classSelected,
-         '\n Subject selected: ', subjectSelected,
-      );
-   }
-
    useEffect(() => {
-      getPeriodList()
-      getRoomList()
+      getShiftList(token, setShiftList)
+      getRoomList(token, setRoomList)
       if (isAdmin) {
-         getTeacherList()
+         getTeacherList(token, setTeacherList)
       } else {
-         // Nếu không phải admin, lấy danh sách giáo viên từ thông tin người dùng
-         setTeacherSelected(info?.id);
-         getTeacherClassSubjectList(info?.id);
+         if (info) setTeacherSelected(info?.id);
+         getTeacherClassRelation(token, teacherSelected, undefined, setTeacherClassRelation);
          form.setFieldValue('teacher_id', info?.id);
          form.setFieldValue('fullname', info?.fullname);
       }
    }, [])
+   // 
    useEffect(() => {
-      if (teacherSelected.length > 0) {
-         getTeacherSubjectRelation(teacherSelected);
-         setSubjectSelected(undefined)
-         setClassSelected(undefined)
-      }
+      getTeacherSubjectRelation(token, teacherSelected, setTeacherSubjectRelation)
+      getTeacherClassRelation(token, teacherSelected, undefined, setTeacherClassRelation)
+      // reset form
+      setSubjectSelected(undefined)
+      form.resetFields(['subject_id'])
+      setClassSelected(undefined)
+      form.resetFields(['class_id'])
    }, [teacherSelected])
+   // 
    useEffect(() => {
       setClassSelected(undefined)
       form.resetFields(['class_id']);
+
       if (subjectSelected?.length > 0 || []) {
-         const classes = teacherClassSubjectList.filter((obj: any) => {
-            return obj?.subject?.id === subjectSelected
+         const matchSubject = teacherClassRelation.filter((obj: any) => {
+            return obj.subject?.id === subjectSelected
          })
-         const classFiltered = classes.map((cls: any) => cls?.classes);
-         console.log('Classes for selected subject:', classFiltered);
+         const classFiltered = matchSubject.map((cls: any) => cls?.classes);
          setClassList(classFiltered);
       }
    }, [subjectSelected])
-
-   // 
-   const getTeacherList = async () => {
-      try {
-         const res = await axios.get(`${API.TEACHERS}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Teacher list res:', data);
-         setTeacherList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Teacher list:', error?.response?.data || error?.message);
-      }
-   }
-   // 
-   const getTeacherSubjectRelation = async (teacherID: string | undefined) => {
-      try {
-         const res = await axios.get(`${API.TEACHER_SUBJECT}?teacher_id=${teacherID}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Teacher-Subject list res:', data);
-         const subjectObj = data.map((item: any) => item.subject);
-         setTeacherSubjectRelation(subjectObj);
-      } catch (error: any) {
-         console.error('Failed to fetch Teacher-Subject list:', error?.response?.data || error?.message);
-      }
-   }
-   // 
-   const getTeacherClassSubjectList = async (teacherID: string | undefined) => {
-      try {
-         const res = await axios.get(`${API.TEACHER_CLASS_SUBJECT}?teacher_id=${teacherID}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Teacher-Class-Subject list res:', data);
-         setTeacherClassSubjectList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Teacher-Class-Subject list:', error?.response?.detail || error?.message);
-      }
-   }
-   // 
-   const getPeriodList = async () => {
-      try {
-         const res = await axios.get(`${API.PERIOD}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Period list res:', data);
-         setShiftList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Period list:', error?.response?.data || error?.message);
-      }
-   }
-   // 
-   const getRoomList = async () => {
-      try {
-         const res = await axios.get(`${API.ROOMS}`, {
-            headers: {
-               Authorization: `Bearer ${token}`
-            }
-         })
-         const data = res.data
-         console.log('Get Room list res:', data);
-         setRoomList(data);
-      } catch (error: any) {
-         console.error('Failed to fetch Room list:', error?.response?.data || error?.message);
-      }
-   };
-
    // 
    const teacherOptions: SelectProps['options'] = teacherList.map((teacher: any) => ({
       label: teacher.fullname,
@@ -201,16 +109,7 @@ const AddSchedulePage = () => {
    const handleShiftSelected = (value: any) => {
       setShiftSelected(value);
    };
-   // 
-   // const uniqueSubjectMap = new Map<string, any>();
-   // teacherClassSubjectList.forEach((subject: any) => {
-   //    const subjectName = subject?.subject?.name;
-   //    if (!uniqueSubjectMap.has(subjectName)) {
-   //       uniqueSubjectMap.set(subjectName, subject);
-   //       console.log('Subject mapping:', subject);
-   //       console.log('Unique subject added:', uniqueSubjectMap);
-   //    }
-   // });
+   //
    const subjectOptions: SelectProps['options'] = Array.from(teacherSubjectRelation.values()).map((subject: any) => ({
       label: subject?.name,
       value: subject?.id
@@ -237,7 +136,6 @@ const AddSchedulePage = () => {
 
    // Hàm xử lý submit form
    const handleSubmit = async (values: any) => {
-      log()
       // console.log('Form values: ', values)
       setLoading(true);
       try {
@@ -268,8 +166,8 @@ const AddSchedulePage = () => {
          showMessage('success', 'Đặt thời khóa biểu thành công!');
          router.replace(`/`);
       } catch (error: any) {
-         const errorData = error?.response?.data?.detail;
-         if (errorData?.non_field_errors?.[0] === 'The fields date, room_id, period_id must make a unique set.') {
+         const errorData = error?.response?.data;
+         if (errorData?.non_field_errors?.[0] === 'The fields date, period_id, room_id must make a unique set.') {
             showMessage('error', `Ca ${shiftSelected} trong ngày ${dayjs(values.date).format(formatDate)} đã được đặt trước, vui lòng chọn ca khác!`)
          } else if (errorData === 'You do not have permission to perform this action.') {
             showMessage('error', 'Bạn không có quyền thực hiện hành động này!');
@@ -433,9 +331,9 @@ const AddSchedulePage = () => {
                <h4>Thêm</h4>
             </Button>
          </Form>
-         <Button onClick={log}>
+         {/* <Button onClick={log}>
             <h4>LOG</h4>
-         </Button>
+         </Button> */}
       </div>
    );
 };

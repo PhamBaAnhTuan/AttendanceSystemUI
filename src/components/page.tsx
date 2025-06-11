@@ -1,7 +1,7 @@
 
 'use client';
 
-import styles from './Home.module.css';
+// import styles from './Home.module.css';
 import Link from 'next/link';
 // hook
 import { useAuth } from '@/hooks/useAuth';

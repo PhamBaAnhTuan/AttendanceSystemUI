@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input } from 'antd';
 import { useParams, useRouter } from 'next/navigation';
-import '../../subject.css'
 import axios from 'axios';
 import { API } from '@/constants/api';
 // hooks
@@ -20,12 +19,6 @@ const UpdateSubjectPage = () => {
    const [loading, setLoading] = useState(false);
    const [initialValues, setInitialValues]: any = useState({});
    const { showMessage } = useMessageContext()
-
-   const log = () => {
-      console.log(
-         // 'Img name: ', imgFileName,
-      );
-   }
 
    useEffect(() => {
       const getSubjectInfo = async () => {
@@ -45,8 +38,6 @@ const UpdateSubjectPage = () => {
             }
             form.setFieldsValue(values);
             setInitialValues(values)
-            console.log('Initial form values: ', initialValues)
-            console.log('Form values: ', form.getFieldsValue())
          } catch (error: any) {
             console.error('Failed to fetch subject:', error?.response?.data || error?.message);
          } finally {
@@ -74,9 +65,9 @@ const UpdateSubjectPage = () => {
                formData.append(key, value);
             });
 
-            for (const [key, value] of formData.entries()) {
-               console.log(`💥PUT ${key}:`, value);
-            }
+            // for (const [key, value] of formData.entries()) {
+            //    console.log(`💥PUT ${key}:`, value);
+            // }
             await axios.put(`${API.SUBJECTS}${id}/`, formData,
                {
                   headers:
