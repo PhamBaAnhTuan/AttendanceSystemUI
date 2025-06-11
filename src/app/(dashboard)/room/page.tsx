@@ -1,7 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 import { Button, List, message, Skeleton, Input } from 'antd';
 import { API } from '@/constants/api'
 // hooks
@@ -20,13 +19,6 @@ const ClassPage = () => {
    const [search, setSearch] = useState('');
    const [roomList, setRoomList] = useState<EntityType[]>([]);
    const [filtered, setFiltered] = useState<EntityType[]>([]);
-
-   const log = () => {
-      console.log(
-         '\nUser: ', info,
-         '\nToken: ', token,
-      );
-   }
 
    useEffect(() => {
       getRoomList(token, setRoomList)

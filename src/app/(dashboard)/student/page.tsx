@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppDispatch } from '@/hooks/useDispatch';
 import { useMessageContext } from '@/context/messageContext';
 // types
-import { EntityType, UserInfoType } from '@/types/types';
+import { UserInfoType } from '@/types/types';
 import { normalizeString } from '@/utils/normalizeString';
 import { getStudentClassRelation, getStudentList } from '@/services/studentServices';
 

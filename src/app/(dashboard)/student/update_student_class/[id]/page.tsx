@@ -12,11 +12,9 @@ import { useMessageContext } from '@/context/messageContext';
 // utils
 import { normalizeString } from '@/utils/normalizeString';
 import { checkClassRelationChange } from '@/utils/checkFormChange';
-// types
-import { UserInfoType } from '@/types/types';
 import { turnToArray } from '@/utils/turnToArray';
 // services
-import { getStudentClassRelation, getStudentClassRelationByStudentID } from '@/services/studentServices';
+import { getStudentClassRelationByStudentID } from '@/services/studentServices';
 import { getClassList } from '@/services/classServices';
 
 

@@ -6,11 +6,10 @@ import axios from 'axios';
 // 
 import { Button, DatePicker, Form, Input, Select, SelectProps, Upload } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import { API, API_BASE } from '@/constants/api';
+import { API } from '@/constants/api';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
 import { useMessageContext } from '@/context/messageContext';
-import { useAppDispatch } from '@/hooks/useDispatch';
 // utils
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -24,7 +23,7 @@ import { turnToArray } from '@/utils/turnToArray';
 import { UserInfoType } from '@/types/types';
 // services
 import { getClassList } from '@/services/classServices';
-import { getStudentClassRelation, getStudentClassRelationByStudentID } from '@/services/studentServices';
+import { getStudentClassRelationByStudentID } from '@/services/studentServices';
 
 
 const UpdateStudentPage = () => {
@@ -41,18 +40,6 @@ const UpdateStudentPage = () => {
    const [classList, setClassList]: any = useState([]);
    const [initialStudentClass, setInitialStudentClass]: any = useState([]);
    const [classSelected, setClassSelected]: any = useState([]);
-
-   const log = () => {
-      console.log(
-         '\n Student ID: ', id,
-         '\n\n Class list: ', classList,
-         '\n Initial Student-Class: ', initialStudentClass,
-         '\n Class selected: ', classSelected,
-
-         '\n\n Initial form values: ', initialValues,
-         '\n Form values: ', form.getFieldsValue(),
-      );
-   }
 
    useEffect(() => {
       getStudentInfo();

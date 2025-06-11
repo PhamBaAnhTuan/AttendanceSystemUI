@@ -13,7 +13,6 @@ import { useMessageContext } from '@/context/messageContext';
 import { normalizeString } from '@/utils/normalizeString';
 import { checkRelationChange } from '@/utils/checkFormChange';
 // types
-import { UserInfoType } from '@/types/types';
 import { turnToArray } from '@/utils/turnToArray';
 // services
 import { getClassList } from '@/services/classServices';

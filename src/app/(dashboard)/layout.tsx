@@ -29,8 +29,6 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useMessageContext } from '@/context/messageContext'
 
-
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
    const pathname = usePathname();
    const { showMessage } = useMessageContext()

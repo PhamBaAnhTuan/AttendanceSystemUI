@@ -1,11 +1,13 @@
 'use client'
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { API } from '@/constants/api';
-import { Button, Input, Form, message } from 'antd';
+import { Button, Input, Form } from 'antd';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
+import { useMessageContext } from '@/context/messageContext';
+
 
 
 const AddRoomPage = () => {
@@ -13,6 +15,7 @@ const AddRoomPage = () => {
    const router = useRouter();
    const [form] = Form.useForm();
    const [loading, setLoading] = useState(false);
+   const { showMessage } = useMessageContext()
 
    // Hàm xử lý submit form
    const handleSubmit = async (values: any) => {
@@ -25,20 +28,15 @@ const AddRoomPage = () => {
             }
          })
          // console.log('Post room res:', response);
-         message.success('Thêm phòng học thành công!');
+         showMessage('success', 'Thêm phòng học thành công!');
          router.replace('/room');
       } catch (error: any) {
          const errorData = error?.response?.data;
-         // Kiểm tra lỗi cụ thể
-         if (errorData?.id?.[0] === 'room with this id already exists.') {
-            message.error('ID phòng học đã tồn tại, vui lòng nhập ID khác');
-         } if (errorData?.name?.[0] === 'room with this name already exists.') {
-            message.error('Tên phòng học đã tồn tại, vui lòng nhập tên khác!');
-         } else {
-            // Lỗi không xác định
-            message.error(`Lỗi không xác định: ${JSON.stringify(errorData)}`);
+
+         if (errorData?.name?.[0] === 'room with this name already exists.') {
+            showMessage('error', 'Tên phòng học đã tồn tại, vui lòng nhập tên khác!');
          }
-         console.error('Lỗi chi tiết từ server:', errorData);
+         console.error('Lỗi chi tiết từ server: ', errorData);
       } finally {
          setLoading(false);
       }
@@ -54,14 +52,6 @@ const AddRoomPage = () => {
             wrapperCol={{ span: 18 }}
             onFinish={handleSubmit}
          >
-            {/* <Form.Item
-               label="ID phòng học"
-               name="id"
-               rules={[{ required: true, message: 'Vui lòng nhập ID phòng học!' }]}
-            >
-               <Input />
-            </Form.Item> */}
-
             <Form.Item
                label="Tên phòng học"
                name="name"

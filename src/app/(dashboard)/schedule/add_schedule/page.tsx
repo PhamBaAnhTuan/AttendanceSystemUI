@@ -6,7 +6,6 @@ import { API } from '@/constants/api';
 import { Button, Input, Form, Select, SelectProps, DatePicker } from 'antd';
 // hooks
 import { useAuth } from '@/hooks/useAuth';
-import { useAppDispatch } from '@/hooks/useDispatch';
 import { useMessageContext } from '@/context/messageContext';
 // utils
 import { normalizeString } from '@/utils/normalizeString';
@@ -14,12 +13,8 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 import { formatDate } from '@/utils/formatTime';
-// 
-import type { CheckboxOptionType, GetProp } from 'antd';
 // services
 import { getTeacherClassRelation, getTeacherList, getTeacherSubjectRelation } from '@/services/teacherServices';
-import { getClassList } from '@/services/classServices';
-import { getSubjectList } from '@/services/subjectServices';
 import { getShiftList } from '@/services/shiftServices';
 import { getRoomList } from '@/services/roomServices';
 

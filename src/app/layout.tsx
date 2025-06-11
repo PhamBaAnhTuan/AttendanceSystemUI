@@ -3,7 +3,6 @@ import '@/styles/globals.css';
 import React from 'react';
 import { ConfigProvider } from 'antd';
 // context
-import { RootContextProvider } from '@/context/rootContext';
 import { MessageProvider } from '@/context/messageContext';
 // components
 import { Providers } from '@/components/Providers';
@@ -18,13 +17,11 @@ export default function RootLayout({
       <body>
         <Providers>
           <ConfigProvider theme={{ token: { colorPrimary: '#1890ff' } }}>
-            <RootContextProvider>
-              <MessageProvider>
-                <AuthGate>
-                  {children}
-                </AuthGate>
-              </MessageProvider>
-            </RootContextProvider>
+            <MessageProvider>
+              <AuthGate>
+                {children}
+              </AuthGate>
+            </MessageProvider>
           </ConfigProvider>
         </Providers>
       </body>

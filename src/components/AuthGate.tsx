@@ -1,27 +1,19 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import SignInPage from '../app/signin/page';
-import { ConfigProvider } from 'antd';
 // context
 import { useAuth } from '@/hooks/useAuth';
-import { RootContextProvider } from '@/context/rootContext';
-// components
-import { Providers } from '@/components/Providers';
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
    const pathname = usePathname();
    const router = useRouter();
-   const { isAuthenticated, isAdmin } = useAuth();
+   const { isAuthenticated } = useAuth();
 
    useEffect(() => {
       if (!isAuthenticated) return;
-      const log = () => console.log(
-         'isAuthenticated: ', isAuthenticated,
-         '\nisAdmin: ', isAdmin
-      )
 
       if (!isAuthenticated && !['/signin'].includes(pathname)) {
          router.replace('/signin');

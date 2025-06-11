@@ -6,6 +6,28 @@ import dayjs from "dayjs";
 import { formatDate } from "@/utils/formatTime";
 import { formatImageNameFile } from "@/utils/formatImageNameFile";
 
+export const fetchUserInfo = async (
+	token: string | null,
+	dispatch: (v: any) => void,
+	getUserInfo: (v: any) => void,
+) => {
+	try {
+		if (!token) {
+			throw new Error("No authentication token found");
+		} else {
+			const res = await axios.get(`${API.USER_INFO}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			dispatch(getUserInfo(res.data));
+			console.log("User info fetched successfully: ", res.data);
+		}
+	} catch (error) {
+		console.error("Failed to fetch user info:", error);
+	}
+};
+
 export const getTeacherList = async (token: string | null, setTeacherList: (v: any) => void) => {
 	try {
 		const res = await axios.get(`${API.TEACHERS}`, {

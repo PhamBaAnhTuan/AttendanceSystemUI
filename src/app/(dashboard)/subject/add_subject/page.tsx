@@ -54,6 +54,7 @@ const AddSubjectPage = () => {
 
    // Hàm xử lý submit form
    const handleSubmit = async (values: any) => {
+      console.log('form: ', values)
       setLoading(true);
       try {
          const res = await axios.post(API.SUBJECTS, values, {
@@ -71,7 +72,7 @@ const AddSubjectPage = () => {
          } if (errorData?.credit?.[0] === 'A valid integer is required.') {
             showMessage('error', 'Vui lòng nhập Số tín chỉ thành số!');
          }
-         console.error('Post Subject error: ', error);
+         console.error('Post Subject error: ', errorData);
       } finally {
          setLoading(false);
       }

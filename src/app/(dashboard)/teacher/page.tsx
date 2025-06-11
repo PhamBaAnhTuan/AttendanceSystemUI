@@ -14,18 +14,9 @@ import { getTeacherList } from '@/services/teacherServices';
 const TeacherPage = () => {
    const { token, info } = useAuth()
 
-   const [loading, setLoading] = useState(false);
-
    const [search, setSearch] = useState('');
    const [teacherList, setTeacherList] = useState<UserInfoType[]>([]);
    const [filtered, setFiltered] = useState<UserInfoType[]>([]);
-
-   const log = () => {
-      console.log(
-         '\nUser: ', info,
-         '\nToken: ', token,
-      );
-   }
 
    useEffect(() => {
       getTeacherList(token, setTeacherList)
@@ -76,7 +67,6 @@ const TeacherPage = () => {
          <div style={{ height: '75vh', overflow: 'auto', margin: '0 auto' }}>
             <List
                size='small'
-               loading={loading}
                itemLayout="horizontal"
                dataSource={filtered}
                renderItem={(item: any) => (
@@ -105,7 +95,7 @@ const TeacherPage = () => {
                         </Button>
                      ]}
                   >
-                     <Skeleton avatar title={false} loading={loading} active >
+                     <Skeleton avatar title={false} active >
                         <List.Item.Meta
                            key={item.id}
                            avatar={<Avatar src={item.avatar} />}
