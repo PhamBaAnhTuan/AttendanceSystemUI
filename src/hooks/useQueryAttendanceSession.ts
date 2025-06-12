@@ -65,7 +65,10 @@ export function useQueryAttendanceSession({
 			}
 			try {
 				const res = await axios.get(`${API.ATTENDANCE}${query}`, {
-					headers: { Authorization: `Bearer ${token}` },
+					headers: {
+						"ngrok-skip-browser-warning": "true",
+						Authorization: `Bearer ${token}`,
+					},
 				});
 				setAttendanceList(res.data);
 				console.log("attend list: ", res.data);

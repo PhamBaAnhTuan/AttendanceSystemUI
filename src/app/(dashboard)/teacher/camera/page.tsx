@@ -111,13 +111,14 @@ function StreamCamera() {
       images.forEach((image, index) => {
          formData.append(`image${index + 1}`, image.blob, image.fileName);
       });
-      for (const [key, value] of formData.entries()) {
-         console.log(`🔥${key}:`, value);
-      }
+      // for (const [key, value] of formData.entries()) {
+      //    console.log(`🔥${key}:`, value);
+      // }
 
       try {
          const res = await axios.post(`${API.FACE_TRAINING}train/`, formData, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                'Authorization': `Bearer ${token}`
             }
          });

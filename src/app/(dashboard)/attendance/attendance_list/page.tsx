@@ -50,9 +50,8 @@ const AttendanceListPage = () => {
          getSubjectList(token, setSubjectList)
          getClassList(token, setClassList)
       } else {
-         if (info) setTeacherSelected(info?.id);
-         getTeacherSubjectRelation(token, teacherSelected, setTeacherSubjectRelation);
-         getTeacherClassRelation(token, teacherSelected, subjectSelected, setTeacherClassRelation);
+         getTeacherSubjectRelation(token, info?.id, setTeacherSubjectRelation);
+         getTeacherClassRelation(token, info?.id, subjectSelected, setTeacherClassRelation);
       }
    }, [])
    // 

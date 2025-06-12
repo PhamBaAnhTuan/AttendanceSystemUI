@@ -34,6 +34,7 @@ const UpdateClassPage = () => {
          try {
             const res = await axios.get(`${API.CLASSES}${id}/`, {
                headers: {
+                  'ngrok-skip-browser-warning': 'true',
                   'Authorization': `Bearer ${token}`
                }
             })
@@ -78,6 +79,7 @@ const UpdateClassPage = () => {
 
             const res = await axios.put(`${API.CLASSES}${id}/`, formData, {
                headers: {
+                  'ngrok-skip-browser-warning': 'true',
                   'Authorization': `Bearer ${token}`,
                },
             });

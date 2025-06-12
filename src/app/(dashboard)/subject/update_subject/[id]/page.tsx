@@ -70,8 +70,10 @@ const UpdateSubjectPage = () => {
             // }
             await axios.put(`${API.SUBJECTS}${id}/`, formData,
                {
-                  headers:
-                     { Authorization: `Bearer ${token}` }
+                  headers: { 
+                     'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}` 
+                  }
                }
             );
             showMessage('success', 'Cập nhật thông tin môn học thành công!');

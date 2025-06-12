@@ -39,6 +39,7 @@ const AddMajorPage = () => {
       try {
          const res = await axios.post(API.MAJOR, values, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                'Authorization': `Bearer ${token}`
             }
          })

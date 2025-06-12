@@ -14,6 +14,8 @@ import { getTeacherList } from '@/services/teacherServices';
 const TeacherPage = () => {
    const { token, info } = useAuth()
 
+   const [loading, setLoading] = useState(false);
+
    const [search, setSearch] = useState('');
    const [teacherList, setTeacherList] = useState<UserInfoType[]>([]);
    const [filtered, setFiltered] = useState<UserInfoType[]>([]);
@@ -35,7 +37,10 @@ const TeacherPage = () => {
       if (confirm(`Bạn có chắc chắn muốn xóa giáo viên ${fullname} không?`)) {
          try {
             await axios.delete(`${API.TEACHERS}${id}/`, {
-               headers: { Authorization: `Bearer ${token}` }
+               headers: { 
+                  'ngrok-skip-browser-warning': 'true',
+                  Authorization: `Bearer ${token}`
+             }
             })
             message.success(`Xóa giáo viên ${fullname} thành công!`);
             setTeacherList(prev => prev.filter(s => s.id !== id));
@@ -67,6 +72,7 @@ const TeacherPage = () => {
          <div style={{ height: '75vh', overflow: 'auto', margin: '0 auto' }}>
             <List
                size='small'
+               loading={false}
                itemLayout="horizontal"
                dataSource={filtered}
                renderItem={(item: any) => (
@@ -95,7 +101,7 @@ const TeacherPage = () => {
                         </Button>
                      ]}
                   >
-                     <Skeleton avatar title={false} active >
+                     <Skeleton avatar title={false} loading={false} active >
                         <List.Item.Meta
                            key={item.id}
                            avatar={<Avatar src={item.avatar} />}

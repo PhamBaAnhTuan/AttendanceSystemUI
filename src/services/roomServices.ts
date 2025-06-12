@@ -6,11 +6,12 @@ export const getRoomList = async (token: string | null, setRoomList: (v: any) =>
 	try {
 		const res = await axios.get(`${API.ROOMS}`, {
 			headers: {
+				"ngrok-skip-browser-warning": "true",
 				Authorization: `Bearer ${token}`,
 			},
 		});
 		const data = res.data;
-		console.log("get Room list res:", data);
+		// console.log("get Room list res:", data);
 		setRoomList(data);
 	} catch (error: any) {
 		console.error("get Room list error: ", error?.response?.data || error?.message);

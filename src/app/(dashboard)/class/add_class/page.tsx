@@ -56,6 +56,7 @@ const AddClassPage = () => {
       try {
          const response = await axios.post(API.CLASSES, values, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                'Authorization': `Bearer ${token}`
             }
          })

@@ -13,8 +13,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAppDispatch } from '@/hooks/useDispatch';
 import { useMessageContext } from '@/context/messageContext';
 // services
-import { signinSuccess, signout } from '@/store/authSlice'
+import { getUserInfo, signinSuccess, signout } from '@/store/authSlice'
 import axios from 'axios';
+import { fetchUserInfo } from '@/services/teacherServices';
 
 const SignInPage = () => {
    const dispatch = useAppDispatch()
@@ -41,6 +42,9 @@ const SignInPage = () => {
          const data = response.data
          showMessage('success', 'Đăng nhập thành công!');
          dispatch(signinSuccess(data))
+         if (data) {
+            fetchUserInfo(data?.access_token, dispatch, getUserInfo)
+         }
       } catch (error: any) {
          const errorMsg = error?.response?.data?.detail;
          if (errorMsg === "Invalid credentials!") {

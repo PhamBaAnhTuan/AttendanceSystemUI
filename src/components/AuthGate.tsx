@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 export default function AuthGate({ children }: { children: React.ReactNode }) {
    const pathname = usePathname();
    const router = useRouter();
-   const { isAuthenticated } = useAuth();
+   const { isAuthenticated, token } = useAuth();
 
    useEffect(() => {
       if (!isAuthenticated) return;

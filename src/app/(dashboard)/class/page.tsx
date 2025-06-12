@@ -26,15 +26,6 @@ const ClassPage = () => {
    const [teacherClassRelation, setTeacherClassRelation] = useState([]);
    const [filtered, setFiltered] = useState<EntityType[]>([]);
 
-   const log = () => {
-      console.log(
-         '\nRole: ', info?.role.name,
-         '\nToken: ', token,
-         '\nClasses: ', classList,
-         '\nFiltered: ', filtered,
-      );
-   }
-
    useEffect(() => {
       if (isAdmin) {
          getClassList(token, setClassList)
@@ -61,7 +52,12 @@ const ClassPage = () => {
       if (confirm(`Bạn có chắc chắn muốn xóa lớp ${name} không?`)) {
          try {
             const res = await axios.delete(`${API.CLASSES}${id}/`,
-               { headers: { Authorization: `Bearer ${token}` } }
+               {
+                  headers: {
+                     'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}`
+                  }
+               }
             )
             showMessage('success', `Xóa lớp ${name} thành công!`);
             setClassList(prev => prev.filter(s => s.id !== id));
@@ -76,7 +72,7 @@ const ClassPage = () => {
    return (
       <div >
          <div style={{ textAlign: 'center', alignContent: 'center' }}>
-            <h2>Danh sách lớp học</h2>
+            <h1>Danh sách lớp học</h1>
          </div>
 
          <div className="header">

@@ -78,7 +78,13 @@ const AddStudentPage = () => {
             formData.append('avatar', renamedFile);
          }
 
-         const res = await axios.post(`${API_AUTH.SIGNUP}`, formData);
+         const res = await axios.post(`${API_AUTH.SIGNUP}`, formData,
+            {
+               headers: {
+                  'ngrok-skip-browser-warning': 'true',
+               }
+            }
+         );
          const newStudentID = res.data?.id
          const newRole = res.data?.role.name
          const newStudentFullname = res.data?.fullname

@@ -26,6 +26,7 @@ import { getRoomList } from '@/services/roomServices';
 const Schedule = () => {
    const dispatch = useAppDispatch()
    const { token, scope, isAdmin, info } = useAuth()
+   const URL = API.SCHEDULE
    // date
    const [dateSelected, setDateSelected]: any = useState();
    // teacher
@@ -48,6 +49,20 @@ const Schedule = () => {
    // schedule
    const [scheduleList, setScheduleList] = useState<TableDataType[]>([]);
 
+   useEffect(() => {
+      getShiftList(token, setShiftList)
+      getRoomList(token, setRoomList)
+      if (isAdmin) {
+         getTeacherList(token, setTeacherList)
+         getClassList(token, setClassList)
+         getSubjectList(token, setSubjectList)
+      } else {
+         getTeacherSubjectRelation(token, info?.id, setTeacherSubjectRelation)
+         getTeacherClassRelation(token, info?.id, undefined, setTeacherClassRelation)
+      }
+      querySchedule(true)
+   }, [])
+
    const scheduleData: TableDataType[] = scheduleList?.map(((sche: any) => ({
       key: sche?.id,
       date: sche?.date,
@@ -57,23 +72,6 @@ const Schedule = () => {
       class: sche?.classes?.name,
       subject: sche?.subject?.name,
    })))
-
-   useEffect(() => {
-      fetchUserInfo(token, dispatch, getUserInfo)
-      getShiftList(token, setShiftList)
-      getRoomList(token, setRoomList)
-      if (isAdmin) {
-         getTeacherList(token, setTeacherList)
-         getClassList(token, setClassList)
-         getSubjectList(token, setSubjectList)
-         getTeacherClassRelation(token, info?.id, undefined, setTeacherClassRelation)
-      } else {
-         if (info) setTeacherSelected(info?.id)
-         getTeacherSubjectRelation(token, info?.id, setTeacherSubjectRelation)
-         getTeacherClassRelation(token, info?.id, undefined, setTeacherClassRelation)
-      }
-      querySchedule(true)
-   }, [])
 
    // 
    const handleDateSelected = (value: any) => {

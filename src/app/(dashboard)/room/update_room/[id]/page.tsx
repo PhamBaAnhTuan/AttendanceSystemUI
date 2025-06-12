@@ -28,6 +28,7 @@ const UpdateRoomPage = () => {
          try {
             const res = await axios.get(`${API.ROOMS}${id}/`, {
                headers: {
+                  'ngrok-skip-browser-warning': 'true',
                   'Authorization': `Bearer ${token}`
                }
             })
@@ -62,6 +63,7 @@ const UpdateRoomPage = () => {
             setLoading(true);
             const res = await axios.put(`${API.ROOMS}${id}/`, changedField, {
                headers: {
+                  'ngrok-skip-browser-warning': 'true',
                   'Authorization': `Bearer ${token}`,
                },
             });

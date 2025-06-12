@@ -24,6 +24,7 @@ const AddRoomPage = () => {
       try {
          const response = await axios.post(API.ROOMS, values, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                'Authorization': `Bearer ${token}`
             }
          })

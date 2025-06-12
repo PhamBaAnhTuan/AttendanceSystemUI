@@ -91,11 +91,16 @@ export function useScheduleQuery({
 			}
 			try {
 				const res = await axios.get(`${API.SCHEDULE}${query}`, {
-					headers: { Authorization: `Bearer ${token}` },
+					headers: {
+						"ngrok-skip-browser-warning": "true",
+						Authorization: `Bearer ${token}`,
+					},
 				});
-				setScheduleList(res.data);
+				const data = res.data;
+				setScheduleList(data);
+				console.log("Schedule res: ", res?.data);
 			} catch (error: any) {
-				console.error("Get schedule error: ", error?.response?.data);
+				console.error("Get schedule error: ", error);
 			} finally {
 				setLoading(false);
 				setShouldQuery(false);

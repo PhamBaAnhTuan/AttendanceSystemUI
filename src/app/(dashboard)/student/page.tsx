@@ -15,13 +15,9 @@ import { getStudentClassRelation, getStudentList } from '@/services/studentServi
 
 
 const StudentPage = () => {
-   const dispatch = useAppDispatch()
    const searchParams = useSearchParams();
    const classID = searchParams.get('classID');
-   const router = useRouter();
    const { token, info, isAdmin } = useAuth()
-
-   const [loading, setLoading] = useState(false);
    const { showMessage } = useMessageContext()
 
    const [search, setSearch] = useState('');
@@ -36,10 +32,9 @@ const StudentPage = () => {
          getStudentList(token, setStudentList)
       }
    }, []);
-
    // Filter list when search input changes
    useEffect(() => {
-      if (studentList) {
+      if (studentList.length > 0) {
          const normalizedSearch = normalizeString(search);
          const filteredData = studentList.filter(student =>
             normalizeString(student.fullname || '').includes(normalizedSearch)
@@ -53,7 +48,12 @@ const StudentPage = () => {
    const confirmDelete = async (id: number, fullname: string) => {
       if (confirm(`Bạn có chắc chắn muốn xóa sinh viên ${fullname} không?`)) {
          try {
-            await axios.delete(`${API.USERS}${id}/`)
+            await axios.delete(`${API.USERS}${id}/`, {
+               headers: {
+                  'ngrok-skip-browser-warning': 'true',
+                  Authorization: `Bearer ${token}`
+               },
+            })
             showMessage('success', `Xóa sinh viên ${fullname} thành công!`);
             setStudentList(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));
@@ -84,7 +84,7 @@ const StudentPage = () => {
          <div style={{ height: '75vh', overflow: 'auto', margin: '0 auto' }}>
             <List
                size='small'
-               loading={loading}
+               loading={false}
                itemLayout="horizontal"
                dataSource={filtered}
                renderItem={(item: any) => (
@@ -120,7 +120,7 @@ const StudentPage = () => {
                         </Button>
                      ]}
                   >
-                     <Skeleton avatar title={false} loading={item.loading} active>
+                     <Skeleton avatar title={false} loading={false} active>
                         <List.Item.Meta
                            avatar={<Avatar src={item?.avatar} />}
                            title={item?.fullname}
@@ -134,7 +134,6 @@ const StudentPage = () => {
                )}
             />
          </div>
-
       </div>
    );
 };

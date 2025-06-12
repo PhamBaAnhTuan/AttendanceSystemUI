@@ -11,11 +11,12 @@ export const getMajorList = async (
 	try {
 		const res = await axios.get(URL, {
 			headers: {
+				"ngrok-skip-browser-warning": "true",
 				Authorization: `Bearer ${token}`,
 			},
 		});
 		const data = res.data;
-		console.log("get Major list res:", data);
+		// console.log("get Major list res:", data);
 		setMajorList(data);
 	} catch (error: any) {
 		console.error("get Major list error: ", error?.response?.data || error?.message);

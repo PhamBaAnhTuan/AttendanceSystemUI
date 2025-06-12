@@ -23,6 +23,7 @@ const AddFacultyPage = () => {
       try {
          const res = await axios.post(API.FACULTY, values, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                'Authorization': `Bearer ${token}`
             }
          })

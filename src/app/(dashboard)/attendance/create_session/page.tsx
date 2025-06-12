@@ -37,8 +37,8 @@ const CreateAttendanceSession = () => {
       if (isAdmin) {
          getTeacherList(token, setTeacherList)
       } else {
-         if (info) setTeacherSelected(info?.id);
-         getTeacherSubjectRelation(token, teacherSelected, setTeacherSubjectRelation);
+         setTeacherSelected(info?.id)
+         getTeacherSubjectRelation(token, info?.id, setTeacherSubjectRelation);
          form.setFieldValue('teacher_id', info?.id);
          form.setFieldValue('fullname', info?.fullname);
       }
@@ -110,6 +110,7 @@ const CreateAttendanceSession = () => {
          // console.log('form: ', form)
          const res = await axios.post(`${API.ATTENDANCE}`, formData, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                'Authorization': `Bearer ${token}`,
             },
          });

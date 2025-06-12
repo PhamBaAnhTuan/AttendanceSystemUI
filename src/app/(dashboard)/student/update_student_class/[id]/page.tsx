@@ -43,6 +43,7 @@ const UpdateTeacherClassSubjectPage = () => {
       try {
          const res = await axios.get(`${API.USERS}${id}`, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                Authorization: `Bearer ${token}`
             }
          })
@@ -79,7 +80,10 @@ const UpdateTeacherClassSubjectPage = () => {
          // console.log('Class to remove: ', classesToRemove)
          try {
             await axios.delete(`${API.STUDENT_CLASS}delete-by-param/?student_id=${studentID}&class_id=${classesToRemove}`, {
-               headers: { Authorization: `Bearer ${token}` },
+               headers: {
+                  'ngrok-skip-browser-warning': 'true',
+                  Authorization: `Bearer ${token}`
+               },
             });
             // console.log(`🗑️ Xóa thành công quan hệ Student-Class: \n${studentID} and ${classesToRemove}`);
          } catch (error) {
@@ -96,7 +100,10 @@ const UpdateTeacherClassSubjectPage = () => {
          try {
             await axios.post(API.STUDENT_CLASS, classPayload,
                {
-                  headers: { Authorization: `Bearer ${token}` }
+                  headers: {
+                     'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}`
+                  }
                }
             );
             // console.log(`➕ Thêm thành công Student-Class: \n${classPayload}`);

@@ -27,13 +27,6 @@ const AddTeacherPage = () => {
    const [subjectList, setSubjectList]: any = useState([]);
    const [subjectSelected, setSubjectSelected]: any = useState([]);
 
-   const log = () => {
-      console.log(
-         '\n Subject list: ', subjectList,
-         '\n Subject selected: ', subjectSelected,
-      );
-   }
-
    useEffect(() => {
       getSubjectList(token, setSubjectList)
    }, [])

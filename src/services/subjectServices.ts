@@ -6,11 +6,12 @@ export const getSubjectList = async (token: string | null, setSubjectList: (v: a
 	try {
 		const res = await axios.get(`${API.SUBJECTS}`, {
 			headers: {
+				"ngrok-skip-browser-warning": "true",
 				Authorization: `Bearer ${token}`,
 			},
 		});
 		const data = res.data;
-		console.log("get Subject list res:", data);
+		// console.log("get Subject list res:", data);
 		setSubjectList(data);
 	} catch (error: any) {
 		console.error("get Subject list error: ", error?.response?.data || error?.message);

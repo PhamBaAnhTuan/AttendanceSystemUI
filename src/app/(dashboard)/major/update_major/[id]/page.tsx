@@ -26,6 +26,7 @@ const UpdateMajorPage = () => {
          try {
             const res = await axios.get(`${API.MAJOR}${id}/`, {
                headers: {
+                  'ngrok-skip-browser-warning': 'true',
                   'Authorization': `Bearer ${token}`
                }
             })

@@ -58,6 +58,7 @@ const UpdateTeacherPage = () => {
       try {
          const res = await axios.get(`${API.USERS}${teacherID}`, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                Authorization: `Bearer ${token}`
             }
          })
@@ -98,7 +99,10 @@ const UpdateTeacherPage = () => {
          for (const subject of subjectsToRemove) {
             try {
                await axios.delete(`${API.TEACHER_SUBJECT}delete-by-param/?teacher_id=${teacherID}&subject_id=${subject}`, {
-                  headers: { Authorization: `Bearer ${token}` },
+                  headers: { 
+                     'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}`
+                },
                });
                // console.log(`🗑️ Xóa thành công quan hệ Teacher-Subject_id: \n${teacherID} and ${subject}`);
             } catch (error) {
@@ -114,7 +118,10 @@ const UpdateTeacherPage = () => {
          try {
             await axios.post(API.TEACHER_SUBJECT, subjectsPayload,
                {
-                  headers: { Authorization: `Bearer ${token}` }
+                  headers: {
+                     'ngrok-skip-browser-warning': 'true',
+                      Authorization: `Bearer ${token}` 
+               }
                }
             );
             // console.log(`➕ Thêm thành công Teacher-Subject_id: \n${subjectsPayload}`);
@@ -175,7 +182,10 @@ const UpdateTeacherPage = () => {
             await axios.put(`${API.USERS}${id}/`, formData,
                {
                   headers:
-                     { Authorization: `Bearer ${token}` }
+                  {
+                     'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}`
+                  }
                }
             );
             showMessage('success', 'Cập nhật thông tin giáo viên thành công!');

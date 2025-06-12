@@ -35,7 +35,13 @@ const ClassPage = () => {
    const confirmDelete = async (id: number, name: string) => {
       if (confirm(`Bạn có chắc chắn muốn xóa phòng ${name} không?`)) {
          try {
-            const res = await axios.delete(`${API.ROOMS}${id}/`)
+            const res = await axios.delete(`${API.ROOMS}${id}/`,
+               {
+                  headers:{
+                     'ngrok-skip-browser-warning': 'true',
+                  }
+               }
+            )
             message.success(`Xóa phòng ${name} thành công!`);
             setRoomList(prev => prev.filter(s => s.id !== id));
             setFiltered(prev => prev.filter(s => s.id !== id));

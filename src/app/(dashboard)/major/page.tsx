@@ -39,7 +39,12 @@ const MajorPage = () => {
       if (confirm(`Bạn có chắc chắn muốn xóa ngành ${name} không?`)) {
          try {
             await axios.delete(`${API.MAJOR}${id}/`,
-               { headers: { Authorization: `Bearer ${token}` } }
+               {
+                  headers: {
+                     'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}`
+                  }
+               }
             )
             showMessage('success', `Xóa ngành ${name} thành công!`);
             setMajorList(prev => prev.filter(s => s.id !== id));
@@ -54,7 +59,7 @@ const MajorPage = () => {
    return (
       <div>
          <div style={{ textAlign: 'center', alignContent: 'center' }}>
-            <h2>Danh sách các ngành</h2>
+            <h1>Danh sách các ngành</h1>
          </div>
 
          <div className="header">

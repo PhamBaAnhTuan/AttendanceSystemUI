@@ -41,7 +41,12 @@ const FacultyPage = () => {
       if (confirm(`Bạn có chắc chắn muốn xóa khoa ${name} không?`)) {
          try {
             await axios.delete(`${API.FACULTY}${id}/`,
-               { headers: { Authorization: `Bearer ${token}` } }
+               {
+                  headers: {
+                     'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}`
+                  }
+               }
             )
             showMessage('success', `Xóa khoa ${name} thành công!`);
             setFacultyList(prev => prev.filter(s => s.id !== id));
@@ -56,7 +61,7 @@ const FacultyPage = () => {
    return (
       <div>
          <div style={{ textAlign: 'center', alignContent: 'center' }}>
-            <h2>Danh sách các khoa</h2>
+            <h1>Danh sách các khoa</h1>
          </div>
 
          <div className="header">

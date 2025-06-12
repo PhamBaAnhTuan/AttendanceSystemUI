@@ -6,11 +6,12 @@ export const getShiftList = async (token: string | null, setShiftList: (v: any) 
 	try {
 		const res = await axios.get(`${API.SHIFT}`, {
 			headers: {
+				"ngrok-skip-browser-warning": "true",
 				Authorization: `Bearer ${token}`,
 			},
 		});
 		const data = res.data;
-		console.log("get Shift list res:", data);
+		// console.log("get Shift list res:", data);
 		setShiftList(data);
 	} catch (error: any) {
 		console.error("get Shift list error: ", error?.response?.data || error?.message);

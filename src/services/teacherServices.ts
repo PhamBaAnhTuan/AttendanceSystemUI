@@ -17,11 +17,12 @@ export const fetchUserInfo = async (
 		} else {
 			const res = await axios.get(`${API.USER_INFO}`, {
 				headers: {
+					"ngrok-skip-browser-warning": "true",
 					Authorization: `Bearer ${token}`,
 				},
 			});
 			dispatch(getUserInfo(res.data));
-			console.log("User info fetched successfully: ", res.data);
+			// console.log("（づ￣3￣）づ╭❤️～ Get user info successfully: ", res.data);
 		}
 	} catch (error) {
 		console.error("Failed to fetch user info:", error);
@@ -32,11 +33,12 @@ export const getTeacherList = async (token: string | null, setTeacherList: (v: a
 	try {
 		const res = await axios.get(`${API.TEACHERS}`, {
 			headers: {
+				"ngrok-skip-browser-warning": "true",
 				Authorization: `Bearer ${token}`,
 			},
 		});
 		const data = res.data;
-		console.log("get Teacher list res: ", data);
+		// console.log("get Teacher list res: ", data);
 		setTeacherList(data);
 	} catch (error: any) {
 		console.error("get Teacher list error: ", error?.response?.data || error?.message);
@@ -72,11 +74,15 @@ export const addUserMethod = async (
 				value = formatImageNameFile(values.avatar, "Teacher", values.fullname);
 			}
 			//
-			formData.append(field, value);
-			console.log(`💥${field}:`, value);
+			// formData.append(field, value);
+			// console.log(`💥${field}:`, value);
 		});
 
-		const res = await axios.post(`${API_AUTH.SIGNUP}`, formData);
+		const res = await axios.post(`${API_AUTH.SIGNUP}`, formData, {
+			headers: {
+				"ngrok-skip-browser-warning": "true",
+			},
+		});
 		const newTeacherID = res.data?.id;
 		const newRole = res.data?.role.name;
 		const newTeacherFullname = res.data?.fullname;
@@ -109,13 +115,14 @@ export const getTeacherSubjectRelation = async (
 	try {
 		const res = await axios.get(`${API.TEACHER_SUBJECT}?teacher_id=${teacherID}`, {
 			headers: {
+				"ngrok-skip-browser-warning": "true",
 				Authorization: `Bearer ${token}`,
 			},
 		});
 		const data = res.data;
-		console.log("get Teacher-Subject relation res: ", data);
+		// console.log("get Teacher-Subject relation res: ", data);
 		const subjects = data?.map((item: any) => item?.subject);
-		console.log("subjects relation: ", subjects);
+		// console.log("subjects relation: ", subjects);
 		setTeacherSubjectRelation(subjects);
 	} catch (error: any) {
 		console.error("get Teacher-Subject relation error: ", error?.response?.detail || error?.message);
@@ -125,7 +132,7 @@ export const getTeacherSubjectRelation = async (
 export const addTeacherSubjectRelation = async (token: string | null, teacherID: number, subjectIDs: number[]) => {
 	const subjectID = turnToArray(subjectIDs);
 	if (subjectID.length === 0) {
-		console.warn("There is no subject ID to add!");
+		// console.warn("There is no subject ID to add!");
 		return;
 	} else {
 		const subjectsPayload = subjectID?.map((subjectId) => ({
@@ -135,9 +142,12 @@ export const addTeacherSubjectRelation = async (token: string | null, teacherID:
 		// console.log("Subject payload to add: ", subjectsPayload);
 		try {
 			const res = await axios.post(API.TEACHER_SUBJECT, subjectsPayload, {
-				headers: { Authorization: `Bearer ${token}` },
+				headers: {
+					"ngrok-skip-browser-warning": "true",
+					Authorization: `Bearer ${token}`,
+				},
 			});
-			console.log(`➕ Thêm thành công Teacher-Subject: `, res.data);
+			// console.log(`➕ Thêm thành công Teacher-Subject: `, res.data);
 		} catch (error) {
 			console.error(`❌ Lỗi thêm Teacher-Subject: `, error);
 		}
@@ -156,11 +166,12 @@ export const getTeacherClassRelation = async (
 			: `${API.TEACHER_CLASS_SUBJECT}?teacher_id=${teacherID}`;
 		const res = await axios.get(URL, {
 			headers: {
+				"ngrok-skip-browser-warning": "true",
 				Authorization: `Bearer ${token}`,
 			},
 		});
 		const data = res.data;
-		console.log("💥💥💥get Teacher-Class relation res: ", data);
+		// console.log("💥💥💥get Teacher-Class relation res: ", data);
 		setTeacherClassRelation(data);
 	} catch (error: any) {
 		console.error("get Teacher-Class relation error: ", error?.response?.detail || error?.message);

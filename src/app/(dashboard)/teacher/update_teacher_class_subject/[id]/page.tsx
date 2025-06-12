@@ -38,20 +38,6 @@ const UpdateTeacherClassSubjectPage = () => {
    const [initialTeacherClass, setInitialTeacherClass]: any = useState([]);
    const [classSelected, setClassSelected]: any = useState([]);
 
-   const log = () => {
-      console.log(
-         '\n Teacher ID: ', id,
-
-         '\n\n 💥Teacher-Subject list: ', teacherSubjectRelation,
-         '\n Subject selected: ', subjectSelected,
-         // // 
-         '\n\n Class list: ', classList,
-         '\n 💥Teacher-Class-Subject list: ', teacherClassRelation,
-         '\n Initial Teacher-Class-Subject: ', initialTeacherClass,
-         '\n Teacher-Class-Subject selected: ', classSelected,
-      );
-   }
-
    useEffect(() => {
       getTeacherInfo();
       getTeacherSubjectRelation(token, id, setTeacherSubjectRelation);
@@ -86,6 +72,7 @@ const UpdateTeacherClassSubjectPage = () => {
       try {
          const res = await axios.get(`${API.USERS}${id}`, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                Authorization: `Bearer ${token}`
             }
          })
@@ -124,7 +111,10 @@ const UpdateTeacherClassSubjectPage = () => {
             // console.log('ID classes to delete: ', classes)
             try {
                await axios.delete(`${API.TEACHER_CLASS_SUBJECT}delete-by-param/?teacher_id=${teacherID}&class_id=${classes}&subject_id=${subjectSelected}`, {
-                  headers: { Authorization: `Bearer ${token}` },
+                  headers: { 
+                     'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}`
+                },
                });
                // console.log(`🗑️ Xóa thành công quan hệ Teacher-Class-Subject: \n${teacherID} and ${classes}`);
             } catch (error) {
@@ -143,7 +133,10 @@ const UpdateTeacherClassSubjectPage = () => {
          try {
             await axios.post(API.TEACHER_CLASS_SUBJECT, classPayload,
                {
-                  headers: { Authorization: `Bearer ${token}` }
+                  headers: { 
+                     'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}`
+                }
                }
             );
             // console.log(`➕ Thêm thành công Teacher-Class-Subject: \n${classPayload}`);

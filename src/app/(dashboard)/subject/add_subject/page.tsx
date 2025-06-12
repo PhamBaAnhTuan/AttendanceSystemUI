@@ -54,11 +54,11 @@ const AddSubjectPage = () => {
 
    // Hàm xử lý submit form
    const handleSubmit = async (values: any) => {
-      console.log('form: ', values)
       setLoading(true);
       try {
          const res = await axios.post(API.SUBJECTS, values, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                'Authorization': `Bearer ${token}`
             }
          })

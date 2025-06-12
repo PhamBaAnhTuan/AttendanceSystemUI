@@ -38,7 +38,10 @@ const SubjectPage = () => {
       if (confirm(`Bạn có chắc chắn muốn xóa môn ${name} không?`)) {
          try {
             await axios.delete(`${API.SUBJECTS}${id}/`,
-               { headers: { Authorization: `Bearer ${token}` } }
+               { headers: {
+                  'ngrok-skip-browser-warning': 'true',
+                   Authorization: `Bearer ${token}` 
+            } }
             )
             showMessage('success', `Xóa môn ${name} thành công!`);
             setSubjectList(prev => prev.filter(s => s.id !== id));

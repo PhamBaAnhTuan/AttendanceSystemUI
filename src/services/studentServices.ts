@@ -3,14 +3,16 @@ import axios from "axios";
 import { API } from "@/constants/api";
 
 export const getStudentList = async (token: string | null, setStudentList: (v: any) => void) => {
+	// console.log("💥💥💥API:", API.STUDENTS);
 	try {
 		const res = await axios.get(`${API.STUDENTS}`, {
 			headers: {
+				"ngrok-skip-browser-warning": "true",
 				Authorization: `Bearer ${token}`,
 			},
 		});
 		const data = res.data;
-		console.log("get Student list res:", data);
+		// console.log("get Student list res:", data);
 		setStudentList(data);
 	} catch (error: any) {
 		console.error("get Student list error: ", error?.response?.data || error?.message);
@@ -26,11 +28,12 @@ export const getStudentClassRelation = async (
 	try {
 		const response = await axios.get(`${API.STUDENT_CLASS}?class_id=${classID}`, {
 			headers: {
+				"ngrok-skip-browser-warning": "true",
 				Authorization: `Bearer ${token}`,
 			},
 		});
-		const data = response.data;
-		const studentList = data.map((obj: any) => obj.student);
+		const data = response?.data;
+		const studentList = data?.map((obj: any) => obj.student);
 		setStudentList(studentList);
 		setClassName(data[0]?.classes?.name);
 	} catch (error: any) {
@@ -47,6 +50,7 @@ export const getStudentClassRelationByStudentID = async (
 	try {
 		const res = await axios.get(`${API.STUDENT_CLASS}?student_id=${studentID}`, {
 			headers: {
+				"ngrok-skip-browser-warning": "true",
 				Authorization: `Bearer ${token}`,
 			},
 		});
@@ -65,7 +69,12 @@ export const addStudentClassRelation = async (token: string | null, studentID: n
 		class_id: classID,
 	};
 	try {
-		await axios.post(API.STUDENT_CLASS, payload, { headers: { Authorization: `Bearer ${token}` } });
+		await axios.post(API.STUDENT_CLASS, payload, {
+			headers: {
+				"ngrok-skip-browser-warning": "true",
+				Authorization: `Bearer ${token}`,
+			},
+		});
 	} catch (error) {
 		console.error(`❌ Lỗi thêm Student-Class: `, error);
 	}

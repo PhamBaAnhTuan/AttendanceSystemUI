@@ -32,6 +32,7 @@ const UpdateFacultyPage = () => {
          try {
             const res = await axios.get(`${API.FACULTY}${id}/`, {
                headers: {
+                  'ngrok-skip-browser-warning': 'true',
                   'Authorization': `Bearer ${token}`
                }
             })
@@ -72,7 +73,10 @@ const UpdateFacultyPage = () => {
             const res = await axios.put(`${API.FACULTY}${id}/`, formData,
                {
                   headers:
-                     { Authorization: `Bearer ${token}` }
+                     { 
+                     'ngrok-skip-browser-warning': 'true',
+                        Authorization: `Bearer ${token}` 
+                  }
                }
             );
             if (res.data) {

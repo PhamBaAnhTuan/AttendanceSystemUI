@@ -72,7 +72,10 @@ function StreamCamera() {
             `${API.ATTENDANCE}${sessionID}/take_attendance/`,
             formData,
             {
-               headers: { Authorization: `Bearer ${token}` },
+               headers: { 
+                  'ngrok-skip-browser-warning': 'true',
+                  Authorization: `Bearer ${token}` 
+            },
             }
          );
          const data = res.data;
@@ -138,7 +141,10 @@ function StreamCamera() {
             `${API.ATTENDANCE}${sessionID}/end-session/`,
             { end_session: true },
             {
-               headers: { Authorization: `Bearer ${token}` },
+               headers: { 
+                  'ngrok-skip-browser-warning': 'true',
+                  Authorization: `Bearer ${token}`
+             },
             }
          );
          const data = res.data;

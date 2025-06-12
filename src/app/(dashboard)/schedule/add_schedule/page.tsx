@@ -154,6 +154,7 @@ const AddSchedulePage = () => {
          });
          const res = await axios.post(`${API.SCHEDULE}`, formData, {
             headers: {
+               'ngrok-skip-browser-warning': 'true',
                'Authorization': `Bearer ${token}`,
             },
          });

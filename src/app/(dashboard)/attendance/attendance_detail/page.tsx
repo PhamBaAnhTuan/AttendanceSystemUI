@@ -33,7 +33,10 @@ function AttendanceDetailPage() {
          const res = await axios.get(`${API.ATTENDANCE}${attendanceID}`,
             {
                headers:
-                  { Authorization: `Bearer ${token}` }
+                  { 
+                  'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}`
+                }
             }
          )
          const data = res.data
@@ -53,7 +56,10 @@ function AttendanceDetailPage() {
          const res = await axios.get(`${API.STUDENT_CLASS}?class_id=${classID}`,
             {
                headers:
-                  { Authorization: `Bearer ${token}` }
+                  { 
+                  'ngrok-skip-browser-warning': 'true',
+                     Authorization: `Bearer ${token}`
+                }
             }
          )
          setStudentList(res.data)
